@@ -106,7 +106,7 @@ async function startServer() {
     }, 1000);
 
     // 2. Start Express listener
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log('\n🔭 ==========================================');
       console.log(`🔭 AI Incident Observatory running at http://localhost:${PORT}`);
       console.log('🔭 ==========================================\n');
