@@ -1,0 +1,3246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AI & ML Incident Observatory</title>
+  
+  <!-- Preload CDN scripts so they download during HTML parse -->
+  <link rel="preload" as="script" href="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" crossorigin>
+  <link rel="preload" as="script" href="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js" crossorigin>
+  <link rel="preload" as="fetch" href="/assets/countries-110m.json" crossorigin>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/assets/style.css?v=4">
+</head>
+<body data-screen-label="Observatory">
+
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="loading-inner">
+      <div class="loading-logo">
+        <span class="loading-logo-dot" style="--c:#3f7bbf"></span>
+        <span class="loading-logo-dot" style="--c:#9655c8"></span>
+        <span class="loading-logo-dot" style="--c:#d65a4a"></span>
+        <span class="loading-logo-dot" style="--c:#1ea985"></span>
+        <span class="loading-logo-dot" style="--c:#d68827"></span>
+        <span class="loading-logo-dot" style="--c:#85a82a"></span>
+      </div>
+      <div class="loading-title">AI Incident Observatory</div>
+      <div class="loading-msg" id="loadingMsg">Initializing observatory...</div>
+      <div class="loading-bar-track"><div class="loading-bar-fill" id="loadingBar"></div></div>
+    </div>
+  </div>
+
+  <!-- Background coordinates grid -->
+  <div class="grid-overlay"></div>
+
+  <!-- Header Branding and Controls -->
+  <header>
+    <div class="header-left">
+      <div class="brand">
+        <h1>AI Incident Observatory</h1>
+        <span class="sub" id="totalsBadge">0 incidents</span>
+      </div>
+      
+      <!-- Cluster View selectors on the left of search bar -->
+      <div class="view-controls">
+        <select class="nav-btn" id="viewSelect" style="pointer-events: auto; padding-right: 28px; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2386868b%22 stroke-width=%223%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer;">
+          <option value="clusters">View: Clusters</option>
+          <option value="network">View: Network</option>
+          <option value="timeline">View: Timeline</option>
+          <option value="severity">View: Severity</option>
+          <option value="geography">View: Geography</option>
+        </select>
+
+        <select class="nav-btn" id="colorSelect" style="pointer-events: auto; padding-right: 28px; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2386868b%22 stroke-width=%223%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer;">
+          <option value="category">Color: By Category</option>
+          <option value="developer">Color: By Company</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Centered Search and Toggles Control Deck -->
+    <div class="center-control-deck">
+      <button class="nav-btn-icon" id="btnToggleFilters" title="Toggle Filters Panel">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+      </button>
+
+      <!-- Top Center Debounced Search Bar -->
+      <div class="search-wrap">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by developer, system, or keyword...">
+      </div>
+
+      <button class="nav-btn-icon" id="btnToggleStats" title="Toggle Stats Panel">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      </button>
+    </div>
+
+    <div class="navigation-controls">
+      <a href="index.html" class="nav-btn nav-desktop-only active" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: none;">
+        <span>Observatory</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
+      </a>
+
+      <a href="analytics.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
+        <span>Analytics</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      </a>
+
+      <a href="ethics.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
+        <span>AI Mindalike</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Mobile bottom nav bar (Analytics + Log Incident links hidden from header on small screens) -->
+  <nav class="mobile-bottom-bar">
+    <a href="index.html" class="mobile-bar-item mobile-bar-active">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
+      <span>Observatory</span>
+    </a>
+    <a href="analytics.html" class="mobile-bar-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ethics.html" class="mobile-bar-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+      <span>Mindalike</span>
+    </a>
+  </nav>
+
+  <!-- Left Collapsible Filter Panel -->
+  <div class="drawer collapsed" id="filter-panel">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <h2>Database Filters</h2>
+      <button class="drawer-close" id="btnCloseFilters">×</button>
+    </div>
+    <div class="drawer-content">
+      
+      <!-- Severity Filter -->
+      <div class="filter-group">
+        <div class="filter-group-title">Severity Class</div>
+        <div class="chip-container" id="filterContainerSeverity">
+          <div class="filter-chip active" data-sev="all">All Severities</div>
+          <div class="filter-chip" data-sev="1">SEV 1</div>
+          <div class="filter-chip" data-sev="2">SEV 2</div>
+          <div class="filter-chip" data-sev="3">SEV 3</div>
+        </div>
+      </div>
+
+      <!-- Company Filter -->
+      <div class="filter-group">
+        <div class="filter-group-title">Company</div>
+        <div class="chip-container" id="filterContainerDeveloper" style="max-height: 140px; overflow-y: auto; padding-right: 4px;">
+          <div class="filter-chip active" data-dev="all">All Companies</div>
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-group">
+        <div class="filter-group-title">Observation Category</div>
+        <div class="chip-container" id="filterContainerCategory" style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
+          <div class="filter-chip active" data-cat="all">All Categories</div>
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- Geography Filter -->
+      <div class="filter-group">
+        <div class="filter-group-title">Geography</div>
+        <div class="chip-container" id="filterContainerGeography" style="max-height: 140px; overflow-y: auto; padding-right: 4px;">
+          <div class="filter-chip active" data-geo="all">All Regions</div>
+        </div>
+      </div>
+
+      <!-- Era / Decade Filter -->
+      <div class="filter-group">
+        <div class="filter-group-title">Era</div>
+        <div class="chip-container" id="filterContainerEra">
+          <div class="filter-chip active" data-era="all">All Years</div>
+          <div class="filter-chip" data-era="2012-2015">2012–2015</div>
+          <div class="filter-chip" data-era="2016-2019">2016–2019</div>
+          <div class="filter-chip" data-era="2020-2022">2020–2022</div>
+          <div class="filter-chip" data-era="2023-2026">2023–2026</div>
+        </div>
+      </div>
+
+      <!-- Tag Filter -->
+      <div class="filter-group">
+        <div class="filter-group-title">Tags</div>
+        <div class="chip-container" id="filterContainerTags" style="max-height: 140px; overflow-y: auto; padding-right: 4px;">
+          <div class="filter-chip active" data-tag="all">All Tags</div>
+        </div>
+      </div>
+
+      <!-- Source Registry Filter -->
+      <div class="filter-group">
+        <div class="filter-group-title">Source Registry</div>
+        <div class="chip-container" id="filterContainerSource">
+          <div class="filter-chip active" data-src="all">All Registries</div>
+          <div class="filter-chip" data-src="aiid">AIID Database</div>
+          <div class="filter-chip" data-src="aiaaic">AIAAIC Repository</div>
+          <div class="filter-chip" data-src="avid">AVID Vulnerability</div>
+          <div class="filter-chip" data-src="atlas">MITRE ATLAS</div>
+          <div class="filter-chip" data-src="news">Live News RSS</div>
+          <div class="filter-chip" data-src="manual">Iconic Seeds</div>
+        </div>
+      </div>
+
+      <!-- Sort Order -->
+      <div class="filter-group">
+        <div class="filter-group-title">Priority Sort</div>
+        <div class="chip-container" id="filterContainerSort">
+          <div class="filter-chip active" data-sort="severity">By Severity</div>
+          <div class="filter-chip" data-sort="recent">Most Recent</div>
+          <div class="filter-chip" data-sort="oldest">Oldest First</div>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btnResetFilters" style="width: 100%; margin-top: 10px; background: none; color: var(--gray-text); border: 1px solid var(--gray-border);">Reset Active Filters</button>
+
+    </div>
+  </div>
+
+  <!-- Right Collapsible Statistics Panel -->
+  <div class="drawer collapsed" id="stats-panel">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <h2>Observation Metrics</h2>
+      <button class="drawer-close" id="btnCloseStats">×</button>
+    </div>
+    <div class="drawer-content">
+      
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValTotal">0</div>
+        <div class="stat-box-lbl">Visible Failures</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValAffected" style="font-size: 13px; font-weight: 600; text-transform: uppercase; font-family: var(--font-sans);">General Public</div>
+        <div class="stat-box-lbl">Primary Crisis Target</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValPeak">2024</div>
+        <div class="stat-box-lbl">Peak Incident Year</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValAvgSev">0.0</div>
+        <div class="stat-box-lbl">Avg Severity Score</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValTopDev" style="font-size: 13px; font-weight: 600; text-transform: uppercase; font-family: var(--font-sans);">—</div>
+        <div class="stat-box-lbl">Top Implicated Developer</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValTopCat" style="font-size: 13px; font-weight: 600; text-transform: uppercase; font-family: var(--font-sans);">—</div>
+        <div class="stat-box-lbl">Dominant Failure Class</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValTopRegion" style="font-size: 13px; font-weight: 600; text-transform: uppercase; font-family: var(--font-sans);">—</div>
+        <div class="stat-box-lbl">Top Affected Region</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValYoY">—</div>
+        <div class="stat-box-lbl">YoY Δ vs Prior Year</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValRecent">0</div>
+        <div class="stat-box-lbl">Last 12 Months</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-box-val" id="statValUniqueDevs">0</div>
+        <div class="stat-box-lbl">Unique Developers</div>
+      </div>
+
+      <!-- Severity breakdown bars -->
+      <div class="filter-group" style="margin-top: 20px;">
+        <div class="filter-group-title">Severity Breakdown</div>
+        
+        <div class="stat-bar-row">
+          <div class="stat-bar-lbl">
+            <span>SEV 3 (Critical)</span>
+            <span id="statPctSev3" style="font-family: var(--font-mono); font-size: 10px;">0%</span>
+          </div>
+          <div class="stat-bar-bg">
+            <div class="stat-bar-fill" id="statFillSev3" style="background: #e74c3c;"></div>
+          </div>
+        </div>
+
+        <div class="stat-bar-row">
+          <div class="stat-bar-lbl">
+            <span>SEV 2 (Moderate)</span>
+            <span id="statPctSev2" style="font-family: var(--font-mono); font-size: 10px;">0%</span>
+          </div>
+          <div class="stat-bar-bg">
+            <div class="stat-bar-fill" id="statFillSev2" style="background: #f39c12;"></div>
+          </div>
+        </div>
+
+        <div class="stat-bar-row">
+          <div class="stat-bar-lbl">
+            <span>SEV 1 (Minor)</span>
+            <span id="statPctSev1" style="font-family: var(--font-mono); font-size: 10px;">0%</span>
+          </div>
+          <div class="stat-bar-bg">
+            <div class="stat-bar-fill" id="statFillSev1" style="background: #3498db;"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Top developers leaderboard -->
+      <div class="filter-group" style="margin-top: 20px;">
+        <div class="filter-group-title">Top Developers</div>
+        <div id="statListDevs" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      </div>
+
+      <!-- Top categories leaderboard -->
+      <div class="filter-group" style="margin-top: 18px;">
+        <div class="filter-group-title">Top Failure Classes</div>
+        <div id="statListCats" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      </div>
+
+      <!-- Geography breakdown -->
+      <div class="filter-group" style="margin-top: 18px;">
+        <div class="filter-group-title">Geographic Spread</div>
+        <div id="statListRegions" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Primary 2D Particle Canvas -->
+  <div id="canvas-wrap">
+    <canvas id="observatoryCanvas"></canvas>
+  </div>
+
+  <!-- Selected Node Details locked overlay -->
+  <div class="locked-card" id="lockedCard" style="display: none;">
+    <div class="locked-card-header">
+      <div style="flex: 1; padding-right: 12px;">
+        <h3 id="lockedTitle" style="font-size: 13.5px; font-weight: 600; line-height: 1.35; color: var(--ink);">Incident Headline</h3>
+      </div>
+      <button class="locked-card-close" id="btnLockedClose">×</button>
+    </div>
+    
+    <div class="t-badges" id="lockedBadges" style="margin-bottom: 12px;">
+      <!-- Populated dynamically -->
+    </div>
+
+    <p id="lockedDescription" style="font-size: 11.5px; line-height: 1.45; color: var(--ink-dim); margin-bottom: 16px; max-height: 180px; overflow-y: auto; overflow-wrap: anywhere; word-break: break-word;">
+      Detailed summary of the failure...
+    </p>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--gray-border); padding-top: 12px;">
+      <div class="t-severity" id="lockedSeverity">
+        <!-- Dots -->
+      </div>
+      <a href="#" target="_blank" id="lockedSourceLink" class="t-link" style="color: var(--accent); font-weight: 600; font-size: 10.5px;">View Source ↗</a>
+    </div>
+  </div>
+
+  <!-- Floating bottom right manual sync trigger -->
+  <button class="nav-btn-icon" id="btnTriggerSync" title="Sync Latest Scraper Feeds" style="position: fixed; right: 24px; bottom: var(--sync-fab-bottom, 116px); z-index: 10; width: 42px; height: 42px; border-radius: 50%; box-shadow: var(--shadow-hover); border-color: var(--gray-border-dark);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+  </button>
+
+  <!-- Glassmorphism Timeline Control Panel -->
+  <div id="timeline-wrap">
+    
+    <div class="timeline-top">
+      
+      <!-- Year Counter & Play Toggle -->
+      <div class="year-counter-wrap">
+        <div class="large-year" id="timelineYearDisplay">2026</div>
+        <button class="all-years-toggle active" id="btnToggleAllYears">All Years</button>
+      </div>
+
+      <!-- Middle Area containing both mini chart and slider aligned perfectly! -->
+      <div class="middle-timeline-area">
+        <!-- Canvas mini incident frequency count -->
+        <div class="chart-container">
+          <canvas id="miniCountChart"></canvas>
+        </div>
+
+        <!-- Timeline Scrubber Slider -->
+        <div class="scrub-container">
+          <input type="range" class="scrub-slider" id="timelineScrubber" min="2012" max="2026" step="1" value="2026" style="margin: 0 10px; width: calc(100% - 20px);" disabled>
+          <span class="scrub-label left" id="scrubMinYear" style="position: absolute; left: 10px; bottom: 0; font-size: 9px; color: var(--gray-text);">2012</span>
+          <span class="scrub-label right" id="scrubMaxYear" style="position: absolute; right: 10px; bottom: 0; font-size: 9px; color: var(--gray-text); text-align: right;">2026</span>
+        </div>
+      </div>
+
+      <!-- Play speed and direction controls -->
+      <div class="player-controls">
+        <button class="play-btn" id="btnTimelinePlay" disabled>▶</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Interactive Hover Tooltip -->
+  <div id="tooltip"></div>
+
+  <!-- Toast Notification System -->
+  <div id="toast">Synchronizing observatory database...</div>
+
+  <!-- Bootstrap counter: fires init() only once both async CDN libs AND the inline script are ready -->
+  <script>
+    var _libsReady = 0;
+    function _checkLibReady() {
+      if (++_libsReady === 2 && typeof _initApp === 'function') _initApp();
+    }
+  </script>
+
+  <!-- CDN libs: async so they never block HTML rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" async onload="_checkLibReady()"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js" async onload="_checkLibReady()"></script>
+
+  <!-- Dynamic Logic JavaScript -->
+  <script>
+    // =========================================================================
+    // Configurations and Color Mappings
+    // =========================================================================
+    const CATEGORIES = [
+      { id: 'bias',           label: 'Bias & Discrimination',          color: '#3f7bbf', startYear: 2012 },
+      { id: 'hallucination',  label: 'Misinformation & Hallucination', color: '#9655c8', startYear: 2012 },
+      { id: 'privacy',        label: 'Privacy & Surveillance',         color: '#1ea985', startYear: 2012 },
+      { id: 'safety',         label: 'Physical Safety',                color: '#d65a4a', startYear: 2012 },
+      { id: 'labor',          label: 'Labor & Economy',                color: '#d68827', startYear: 2012 },
+      { id: 'copyright',      label: 'Copyright & IP',                 color: '#85a82a', startYear: 2012 },
+      { id: 'agentic',        label: 'Agentic Failures',               color: '#4d7099', startYear: 2012 },
+      { id: 'environmental',  label: 'Environmental',                  color: '#2e7d32', startYear: 2012 },
+      { id: 'criminal',       label: 'Criminal Justice',               color: '#c0392b', startYear: 2012 },
+      { id: 'healthcare',     label: 'Healthcare',                     color: '#00838f', startYear: 2012 },
+      { id: 'financial',      label: 'Financial',                      color: '#ad1457', startYear: 2012 },
+      { id: 'manipulation',   label: 'Manipulation & Autonomy',        color: '#cf3f8e', startYear: 2012 }
+    ];
+    const CAT_BY_LABEL = Object.fromEntries(CATEGORIES.map(c => [c.label, c]));
+
+    const DEV_COLORS = {
+      "Google": "#e74c3c",    // Premium red-orange
+      "OpenAI": "#10a37f",    // OpenAI teal-green
+      "Microsoft": "#00a2ed", // Microsoft blue
+      "Meta": "#0081fb",      // Meta blue
+      "Anthropic": "#cc7b5c", // Anthropic clay
+      "Apple": "#8e8e93",     // Apple gray
+      "Amazon": "#ff9900"     // Amazon orange
+    };
+
+    // Cache so each unique developer string resolves to the same color across rebuilds.
+    const _devColorCache = {};
+    function getDeveloperColor(developer) {
+      if (!developer) return '#4a5568';
+      if (_devColorCache[developer]) return _devColorCache[developer];
+
+      // Big-tech overrides first (keeps brand recognition).
+      for (const [key, val] of Object.entries(DEV_COLORS)) {
+        if (developer.toLowerCase().includes(key.toLowerCase())) {
+          _devColorCache[developer] = val;
+          return val;
+        }
+      }
+
+      // Deterministic HSL from a string hash — distinct per company, stable across reloads.
+      let h = 0;
+      for (let i = 0; i < developer.length; i++) {
+        h = (h * 31 + developer.charCodeAt(i)) | 0;
+      }
+      const hue = Math.abs(h) % 360;
+      const sat = 55 + (Math.abs(h >> 8) % 20);   // 55–75%
+      const lig = 45 + (Math.abs(h >> 16) % 12);  // 45–57%
+      const color = `hsl(${hue}, ${sat}%, ${lig}%)`;
+      _devColorCache[developer] = color;
+      return color;
+    }
+
+    // =========================================================================
+    // Core Application State & Texture Caching
+    // =========================================================================
+    class TextureCache {
+      constructor() {
+        this.cache = {};
+      }
+      
+      get(color, radius, isHovered = false) {
+        // Quantize radius into half-pixel buckets so we don't blow up the cache at 10k nodes
+        const drawRadius = isHovered ? radius * 1.35 : radius;
+        const bucket = Math.max(1, Math.round(drawRadius * 2)) / 2;
+        const key = `${color}-${bucket}`;
+        if (this.cache[key]) return this.cache[key];
+
+        const c = document.createElement('canvas');
+        const cx2d = c.getContext('2d');
+        const size = Math.ceil(bucket * 2) + 4;
+        c.width = size;
+        c.height = size;
+
+        const cx = size / 2;
+        const cy = size / 2;
+        // Solid arc — works for hex, hsl(), rgb(), or any CSS color string.
+        cx2d.fillStyle = color;
+        cx2d.beginPath();
+        cx2d.arc(cx, cy, bucket, 0, Math.PI * 2);
+        cx2d.fill();
+
+        this.cache[key] = { canvas: c, size, offset: size / 2 };
+        return this.cache[key];
+      }
+    }
+    
+    const textureCache = new TextureCache();
+
+    const state = {
+      view: 'clusters',           // 'clusters' | 'network' | 'timeline' | 'severity' | 'geography'
+      colorMode: 'category',      // 'category' | 'developer'
+      year: 2026,
+      allYears: true,
+      playing: false,
+      playSpeed: 1.0,             // 0.5 | 1.0 | 2.0
+      searchQuery: '',
+      clusterCentroids: null,     // Will hold centroids
+      severityCentroids: null,    // Will hold severity centroids
+      geographyCentroids: null,   // Will hold geography centroids
+      worldMapFeatures: null,     // TopoJSON country features for world map
+      worldMapMesh: null,         // TopoJSON country border mesh
+      _geoProjection: null,       // D3 geo projection (Natural Earth)
+      viewOpacities: {
+        clusters: 1,
+        network: 0,
+        timeline: 0,
+        severity: 0,
+        geography: 0
+      },
+      
+      // Active filters (multi-select use arrays; single-select use strings)
+      filters: {
+        severity: 'all',
+        developer: ['all'],
+        category: ['all'],
+        geography: ['all'],
+        era: 'all',
+        tag: ['all'],
+        source: ['all'],
+        sort: 'severity'
+      },
+
+      // Database lists
+      rawIncidents: [],
+      filteredIncidents: [],
+      uniqueDevelopers: [],
+      uniqueCategories: [],
+      
+      // Hover & Selection state
+      hoveredNode: null,
+      selectedNode: null,
+
+      // Canvas pan & zoom state
+      transform: { x: 0, y: 0, k: 1 },
+      isDragging: false,
+      dragStart: { x: 0, y: 0 },
+
+      // Cursor coords (-9999 = offscreen). mouseDirty triggers a hit-test pass.
+      mouseX: -9999,
+      mouseY: -9999,
+      mouseDirty: false,
+      cursorX: -9999,
+      cursorY: -9999,
+      cursorVx: 0,
+      cursorVy: 0,
+      cursorR: 10,
+      cursorTrail: [],
+
+      // Density flags set by buildParticles() based on filteredIncidents.length
+      densityMode: false,
+      heavyMode: false
+    };
+
+    const YEAR_MIN = 2012, YEAR_MAX = 2026;
+
+    // Country name → [longitude, latitude] for D3 geo projection
+    const GEO_COORDS = {
+      'United States': [-95.71, 37.09], 'USA': [-95.71, 37.09], 'US': [-95.71, 37.09],
+      'United States of America': [-95.71, 37.09],
+      'Canada': [-96.80, 56.13], 'Mexico': [-102.55, 23.63], 'Mexi': [-102.55, 23.63],
+      // US states → USA centroid
+      'California': [-95.71, 37.09], 'Texas': [-95.71, 37.09], 'New York': [-95.71, 37.09],
+      'Florida': [-95.71, 37.09], 'Illinois': [-95.71, 37.09], 'Washington': [-95.71, 37.09],
+      'Colorado': [-95.71, 37.09], 'Delaware': [-95.71, 37.09], 'Georgia': [-95.71, 37.09],
+      'Arizona': [-95.71, 37.09], 'Oregon': [-95.71, 37.09], 'Nevada': [-95.71, 37.09],
+      'Ohio': [-95.71, 37.09], 'Michigan': [-95.71, 37.09], 'Virginia': [-95.71, 37.09],
+      'Massachusetts': [-95.71, 37.09], 'Pennsylvania': [-95.71, 37.09],
+      'North Dakota': [-95.71, 37.09],
+      // Europe
+      'United Kingdom': [-3.43, 55.37], 'UK': [-3.43, 55.37], 'Britain': [-3.43, 55.37],
+      'England': [-1.17, 52.35], 'Scotland': [-4.20, 56.49], 'Wales': [-3.78, 52.13],
+      'Northern Ireland': [-6.34, 54.60], 'UK - England': [-3.43, 55.37],
+      'Germany': [10.45, 51.16], 'France': [2.21, 46.23], 'Italy': [12.56, 41.87],
+      'Spain': [-3.74, 40.46], 'Netherlands': [5.29, 52.13], 'Holland': [5.29, 52.13],
+      'Sweden': [18.64, 60.12], 'Switzerland': [8.22, 46.81], 'Norway': [8.47, 60.47],
+      'Denmark': [9.50, 56.26], 'Finland': [25.74, 61.92], 'Belgium': [4.46, 50.50],
+      'Austria': [14.55, 47.51], 'Poland': [19.14, 51.91], 'Portugal': [-8.22, 39.39],
+      'Czech Republic': [15.47, 49.81], 'Czechia': [15.47, 49.81],
+      'Hungary': [19.50, 47.16], 'EU - Hungary': [19.50, 47.16], 'Romania': [24.96, 45.94], 'Greece': [21.82, 39.07],
+      'Ireland': [-8.24, 53.14], 'Republic of Ireland': [-8.24, 53.14], 'Rep Ireland': [-8.24, 53.14],
+      'Ukraine': [31.16, 48.37], 'Russia': [60.00, 57.00],
+      'Estonia': [25.01, 58.59], 'Latvia': [24.60, 56.88], 'Lithuania': [23.88, 55.17],
+      'Albania': [20.17, 41.15], 'Serbia': [21.00, 44.02], 'Kosovo': [20.90, 42.60],
+      'Croatia': [15.20, 45.10], 'Montenegro': [19.37, 42.71], 'Bulgaria': [25.49, 42.73],
+      'Cyprus': [33.43, 35.13], 'Luxembourg': [6.13, 49.81], 'Malta': [14.37, 35.94],
+      'Slovakia': [19.70, 48.67], 'Slovenia': [14.99, 46.15],
+      'Bosnia': [17.68, 43.91], 'Bosnia and Herzegovina': [17.68, 43.91],
+      'Macedonia': [21.74, 41.60], 'North Macedonia': [21.74, 41.60], 'Moldova': [28.37, 47.41],
+      'Türkiye': [35.24, 38.96], 'Turkey': [35.24, 38.96],
+      'EU': [10.00, 50.00], 'Europe': [10.00, 50.00], 'Canary Islands': [-15.50, 28.00],
+      // Asia
+      'China': [104.19, 35.86], 'Chi': [104.19, 35.86], 'Japan': [138.25, 36.20], 'India': [78.96, 20.59],
+      'South Korea': [127.76, 35.90], 'Korea': [127.76, 35.90], 'S Korea': [127.76, 35.90],
+      'N Korea': [127.00, 40.00], 'North Korea': [127.00, 40.00],
+      'Taiwan': [120.96, 23.69], 'Singapore': [103.81, 1.35], 'Hong Kong': [114.10, 22.39],
+      'Israel': [34.85, 31.04], 'Palestine': [35.23, 31.95], 'Saudi Arabia': [45.07, 23.88],
+      'UAE': [53.84, 23.42], 'United Arab Emirates': [53.84, 23.42], 'UAE - Abu Dhabi': [53.84, 23.42],
+      'Dubai': [55.27, 25.20],
+      'Iran': [53.68, 32.42], 'Pakistan': [69.34, 30.37], 'Bangladesh': [90.35, 23.68],
+      'Indonesia': [113.92, -0.78], 'Thailand': [100.99, 15.87], 'Vietnam': [108.27, 14.05],
+      'Philippines': [121.77, 12.87], 'Malaysia': [101.97, 4.21],
+      'Nepal': [84.12, 28.39], 'Cambodia': [104.99, 12.56], 'Jordan': [36.24, 30.58],
+      'Afghanistan': [67.71, 33.93], 'Greenland': [-42.60, 71.71],
+      'India / USA': [78.96, 20.59], 'Myanmar': [95.96, 21.92], 'Sri Lanka': [80.77, 7.87],
+      'Brunei': [114.73, 4.54], 'Yemen': [48.52, 15.55], 'Lebanon': [35.86, 33.85],
+      // Oceania
+      'Australia': [133.77, -25.27], 'New Zealand': [174.88, -40.90],
+      // South America
+      'Brazil': [-51.92, -14.23], 'Argentina': [-63.61, -38.41], 'Chile': [-71.54, -35.67],
+      'Colombia': [-74.29, 4.57], 'Peru': [-75.01, -9.18], 'Ecuador': [-77.77, -1.83],
+      'Venezuela': [-66.59, 6.42],
+      // Africa
+      'South Africa': [22.93, -30.55], 'Nigeria': [8.67, 9.08], 'Kenya': [37.90, 0.02],
+      'Egypt': [30.80, 26.82], 'Morocco': [-5.03, 31.79], 'Ethiopia': [40.48, 9.14],
+      'Ghana': [-1.02, 7.95], 'Tanzania': [34.89, -6.37], 'Uganda': [32.29, 1.37],
+      'Benin': [2.32, 9.30], 'Burkina Faso': [-1.56, 12.36], 'Burkino Faso': [-1.56, 12.36],
+      'Mali': [-3.99, 17.57], 'Gabon': [11.61, -0.80], 'Zanzibar': [39.35, -6.16],
+      'Zanzib': [39.35, -6.16], 'Algeria': [1.66, 28.03], 'Angola': [17.87, -11.20],
+      'Botswana': [24.68, -22.33], 'Cameroon': [12.35, 7.37], 'Chad': [18.73, 15.45],
+      'Sierra Leone': [-11.78, 8.46], 'Sudan': [30.22, 12.86], 'Libya': [17.23, 26.34],
+      'Zimbabwe': [29.15, -19.02], 'Rwanda': [29.87, -1.94],
+      // Catch-alls mapped to South Pacific Ocean for a dedicated Global Cluster
+      'All': [-140, -15], 'Global': [-140, -15], 'Unknown': [-140, -15],
+      'International': [-140, -15], 'Worldwide': [-140, -15],
+      'Multiple': [-140, -15], 'Various': [-140, -15], 'Jamaica': [-77.30, 18.11], 'Bahamas': [-77.40, 25.03],
+    };
+
+    // Resolve multi-country geography strings like "Australia; UK; USA" → first known country's coords
+    function resolveGeoCoords(rawGeo) {
+      if (!rawGeo) return GEO_COORDS['Global'];
+      const direct = GEO_COORDS[rawGeo.trim()];
+      if (direct) return direct;
+      const parts = rawGeo.split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
+      for (const p of parts) {
+        const c = GEO_COORDS[p];
+        if (c) return c;
+      }
+      return GEO_COORDS['Global'];
+    }
+
+    // Approximate country half-width in degrees of longitude (for scatter radius computation)
+    const GEO_SCATTER_DEG = {
+      'Russia': 22, 'Canada': 20, 'United States': 14, 'USA': 14, 'US': 14,
+      'United States of America': 14, 'China': 14, 'Brazil': 14, 'Australia': 14,
+      'India': 10, 'Argentina': 8, 'Mexico': 8, 'Indonesia': 10, 'Kazakhstan': 11,
+      'Saudi Arabia': 8, 'Iran': 7, 'Mongolia': 9, 'Peru': 6, 'Sudan': 7,
+      'Algeria': 8, 'Libya': 6, 'Chad': 6, 'Niger': 6, 'Angola': 6, 'Mali': 6,
+      'South Africa': 6, 'Ethiopia': 5, 'Nigeria': 4, 'Egypt': 5,
+      'Colombia': 5, 'Bolivia': 5, 'Ukraine': 5, 'Turkey': 5, 'Türkiye': 5,
+      'France': 3.5, 'Germany': 3, 'Poland': 3.5, 'Spain': 4, 'Sweden': 3,
+      'Norway': 3, 'Finland': 3, 'Romania': 3, 'Japan': 3, 'Vietnam': 2.5,
+      'United Kingdom': 2.5, 'UK': 2.5, 'Italy': 2, 'Morocco': 3,
+      'EU': 8, 'Europe': 8, 'Default': 2.5,
+    };
+
+    // Dynamic extraction of all country keys from GEO_COORDS, excluding states and special catch-alls
+    const EXCLUDED_GEO_KEYS = new Set([
+      // Special catch-alls
+      'All', 'Global', 'Unknown', 'International', 'Worldwide', 'Multiple', 'Various', 'EU', 'Europe',
+      // US States & duplicates
+      'California', 'Texas', 'New York', 'Florida', 'Illinois', 'Washington', 'Colorado', 'Delaware', 'Georgia',
+      'Arizona', 'Oregon', 'Nevada', 'Ohio', 'Michigan', 'Virginia', 'Massachusetts', 'Pennsylvania', 'North Dakota',
+      'USA', 'US', 'United States of America', 'Britain', 'England', 'Scotland', 'Wales', 'Northern Ireland', 'UK - England',
+      'Holland', 'Czechia', 'Korea', 'S Korea', 'N Korea', 'United Arab Emirates', 'UAE - Abu Dhabi', 'Dubai',
+      'Republic of Ireland', 'Rep Ireland', 'Turkey', 'Zanzib', 'Burkino Faso', 'India / USA'
+    ]);
+
+    const GLOBAL_SCATTER_COUNTRIES = Object.keys(GEO_COORDS).filter(k => !EXCLUDED_GEO_KEYS.has(k));
+
+    // Tags that expand to the global scatter list rather than a specific location
+    const GEO_EXPAND_GLOBAL = new Set(['Global', 'Multiple', 'Various', 'All', 'International', 'Worldwide']);
+
+    // Parse a raw geography string into an array of resolved country names for multi-dot placement
+    function parseGeoCountries(rawGeo) {
+      const str = (rawGeo || '').trim();
+      if (!str) return ['Global'];
+      // Check if any part is a "global" keyword → expand to representative countries
+      const parts = str.split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
+      const hasGlobal = parts.some(p => GEO_EXPAND_GLOBAL.has(p));
+      if (hasGlobal) return ['Global'];
+      // Otherwise collect each known country from the parts
+      const countries = [];
+      for (const p of parts) {
+        if (GEO_COORDS[p]) countries.push(p);
+      }
+      return countries.length > 0 ? countries : ['Global'];
+    }
+
+    // Deterministic scatter radius in canvas pixels for a country at the given projection
+    function countryScatterPx(countryName, projection) {
+      const coords = GEO_COORDS[countryName] || GEO_COORDS['Global'];
+      const degs = GEO_SCATTER_DEG[countryName] || GEO_SCATTER_DEG['Default'];
+      const base = projection(coords);
+      const offset = projection([coords[0] + degs, coords[1]]);
+      if (!base || !offset) return 20;
+      return Math.max(8, Math.abs(offset[0] - base[0]));
+    }
+
+    // Deterministic hash → [0, 1) for stable scatter positions across rebuilds
+    function seededRand(n) {
+      let x = Math.sin(n * 127.1 + 311.7) * 43758.5453123;
+      return x - Math.floor(x);
+    }
+
+    // =========================================================================
+    // Particles Bookkeeping & Physics
+    // =========================================================================
+    const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+    const particles = [];
+    const edges = [];
+
+    // Set up main 2D drawing context
+    const canvas = document.getElementById('observatoryCanvas');
+    const ctx = canvas.getContext('2d');
+    let DPR = window.devicePixelRatio || 1;
+
+    const CURSOR_GRAB     = 'grab';
+    const CURSOR_GRABBING = 'grabbing';
+
+    // Set up timeline stats count chart
+    const miniChartCanvas = document.getElementById('miniCountChart');
+    const miniChartCtx = miniChartCanvas.getContext('2d');
+
+    // =========================================================================
+    // API Integrations & Data Ingestion
+    // =========================================================================
+    
+    // Toast notification manager
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.background = isError ? '#e74c3c' : 'var(--ink)';
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    // Fetch and cache world map TopoJSON for the Geography view
+    async function loadWorldMap() {
+      try {
+        const res = await fetch('/assets/countries-110m.json');
+        const topo = await res.json();
+        state.worldMapFeatures = topojson.feature(topo, topo.objects.countries);
+        state.worldMapMesh = topojson.mesh(topo, topo.objects.countries, (a, b) => a !== b);
+        // Rebuild particles if data is already loaded so geo positions are computed
+        if (state.filteredIncidents.length > 0) {
+          buildParticles();
+        }
+      } catch (e) {
+        console.warn('World map load failed — geography view will show dots without map', e);
+      }
+    }
+
+    const CACHE_KEY    = 'aiobs_incidents_cache';
+    const CACHE_MAX_MS = 60 * 60 * 1000; // 60 minutes — stale-while-revalidate handles freshness
+    const PAGE_SIZE    = 500;
+
+    function saveCache(incidents) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: incidents }));
+      } catch (e) {}
+    }
+
+    function loadCache() {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw); // always return if it exists — staleness handled below
+      } catch (e) { return null; }
+    }
+
+    function addSearchBlobs(incidents) {
+      incidents.forEach(inc => {
+        if (!inc._search) {
+          inc._search = `${inc.title || ''}\n${inc.developer || ''}\n${inc.description || ''}`.toLowerCase();
+        }
+      });
+    }
+
+    // Fetch all pages in parallel and return combined incident array
+    async function fetchAllIncidents() {
+      const resP1 = await fetch(`/api/incidents?page=1&pageSize=${PAGE_SIZE}&lightweight=true`);
+      if (!resP1.ok) throw new Error('Failed to load incidents');
+      const page1 = await resP1.json();
+      if (page1.pages <= 1) return page1.data;
+
+      const fetches = [];
+      for (let p = 2; p <= page1.pages; p++) {
+        fetches.push(fetch(`/api/incidents?page=${p}&pageSize=${PAGE_SIZE}&lightweight=true`).then(r => r.json()));
+      }
+      const rest = await Promise.all(fetches);
+      let all = page1.data;
+      rest.forEach(body => { all = all.concat(body.data); });
+      return all;
+    }
+
+    // Fetch initial database items, unique categories, stats, and developers
+    async function loadData(forceFetch = false) {
+      try {
+        const cached = loadCache();
+        const isStale = !cached || (Date.now() - cached.ts > CACHE_MAX_MS);
+
+        if (!forceFetch && cached && Array.isArray(cached.data) && cached.data.length > 0) {
+          // Stale-while-revalidate: paint cached dots IMMEDIATELY (zero network wait)
+          state.rawIncidents = cached.data;
+          addSearchBlobs(state.rawIncidents);
+
+          const [resDev, resCat] = await Promise.all([fetch('/api/developers'), fetch('/api/categories')]);
+          state.uniqueDevelopers = resDev.ok ? await resDev.json() : [];
+          state.uniqueCategories = resCat.ok ? await resCat.json() : [];
+
+          renderAfterLoad(false);
+
+          // If cache is stale, silently refresh in the background
+          if (isStale) {
+            refreshInBackground().catch(e => console.warn('Background refresh error:', e));
+          }
+          return;
+        }
+
+        // No cache — fetch ALL pages + devs + cats in parallel before first render
+        const [allData, resDev, resCat] = await Promise.all([
+          fetchAllIncidents(),
+          fetch('/api/developers'),
+          fetch('/api/categories')
+        ]);
+
+        state.rawIncidents = allData;
+        addSearchBlobs(state.rawIncidents);
+        state.uniqueDevelopers = resDev.ok ? await resDev.json() : [];
+        state.uniqueCategories = resCat.ok ? await resCat.json() : [];
+
+        renderAfterLoad(forceFetch);
+        setTimeout(() => saveCache(state.rawIncidents), 200);
+
+      } catch (err) {
+        console.error('Data load failure:', err.message);
+        showToast('Error loading registry data', true);
+      }
+    }
+
+    async function refreshInBackground() {
+      try {
+        const [allData, resDev, resCat] = await Promise.all([
+          fetchAllIncidents(),
+          fetch('/api/developers'),
+          fetch('/api/categories')
+        ]);
+        state.rawIncidents = allData;
+        addSearchBlobs(state.rawIncidents);
+        state.uniqueDevelopers = resDev.ok ? await resDev.json() : [];
+        state.uniqueCategories = resCat.ok ? await resCat.json() : [];
+        renderAfterLoad(false);
+        setTimeout(() => saveCache(state.rawIncidents), 200);
+      } catch (e) {
+        console.warn('Background refresh error:', e);
+      }
+    }
+
+    function renderAfterLoad(isUpdate) {
+      populateFiltersUI();
+      updateStatsPanel();
+      drawMiniCountChart();
+      document.getElementById('totalsBadge').textContent = `${state.rawIncidents.length} incidents`;
+      // Defer the heavy buildParticles call by one frame so the loading screen
+      // animation gets a chance to render before the main thread is blocked
+      requestAnimationFrame(() => {
+        filterAndProcessData(isUpdate);
+        hideLoadingScreen();
+      });
+    }
+
+    // Triggers scrapers sync trigger
+    document.getElementById('btnTriggerSync').addEventListener('click', async () => {
+      showToast('Contacting scrapers (Deduplicating sync)...');
+      document.getElementById('btnTriggerSync').classList.add('syncing');
+      try {
+        const res = await fetch('/api/sync', { method: 'POST' });
+        const stats = await res.json();
+
+        document.getElementById('btnTriggerSync').classList.remove('syncing');
+        showToast(`Sync complete! Added: ${stats.added}, Skipped: ${stats.skipped}`);
+
+        // Force-fetch fresh data from server and update cache
+        await loadData(true);
+      } catch (err) {
+        console.error('Sync failed:', err.message);
+        document.getElementById('btnTriggerSync').classList.remove('syncing');
+        showToast('Sync pipeline failed', true);
+      }
+    });
+
+    // =========================================================================
+    // Filter & Search Engine
+    // =========================================================================
+    
+    // Single-select chip group (era, sort).
+    function bindChipGroup(containerSelector, dataAttr, stateKey) {
+      document.querySelectorAll(`${containerSelector} .filter-chip`).forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll(`${containerSelector} .filter-chip`).forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          state.filters[stateKey] = chip.dataset[dataAttr];
+          filterAndProcessData();
+        });
+      });
+    }
+
+    // Multi-select chip group (developer, category, geography, tag, source).
+    function bindMultiChipGroup(containerSelector, dataAttr, stateKey) {
+      document.querySelectorAll(`${containerSelector} .filter-chip`).forEach(chip => {
+        chip.addEventListener('click', () => {
+          const val = chip.dataset[dataAttr];
+          let current = state.filters[stateKey];
+
+          if (val === 'all') {
+            state.filters[stateKey] = ['all'];
+          } else {
+            current = current.filter(v => v !== 'all');
+            if (current.includes(val)) {
+              current = current.filter(v => v !== val);
+            } else {
+              current.push(val);
+            }
+            state.filters[stateKey] = current.length === 0 ? ['all'] : current;
+          }
+
+          const active = state.filters[stateKey];
+          document.querySelectorAll(`${containerSelector} .filter-chip`).forEach(c => {
+            const cval = c.dataset[dataAttr];
+            c.classList.toggle('active', cval === 'all' ? active[0] === 'all' : active.includes(cval));
+          });
+
+          filterAndProcessData();
+        });
+      });
+    }
+
+    function populateFiltersUI() {
+      // Company (developer) chips
+      const devContainer = document.getElementById('filterContainerDeveloper');
+      devContainer.innerHTML = '<div class="filter-chip active" data-dev="all">All Companies</div>' +
+        state.uniqueDevelopers.map(dev => `<div class="filter-chip" data-dev="${escapeHtml(dev)}">${escapeHtml(dev)}</div>`).join('');
+
+      // Category chips
+      const catContainer = document.getElementById('filterContainerCategory');
+      catContainer.innerHTML = '<div class="filter-chip active" data-cat="all">All Categories</div>' +
+        state.uniqueCategories.map(c => `<div class="filter-chip" data-cat="${escapeHtml(c.category)}">${escapeHtml(c.category)}</div>`).join('');
+
+      // Geography chips — split multi-country strings (e.g. "USA; UK") into individual country chips.
+      const geoSet = new Map();
+      state.rawIncidents.forEach(inc => {
+        const parts = (inc.geography || 'Global').split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
+        parts.forEach(country => geoSet.set(country, (geoSet.get(country) || 0) + 1));
+      });
+      const geoSorted = [...geoSet.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
+      const geoContainer = document.getElementById('filterContainerGeography');
+      geoContainer.innerHTML = '<div class="filter-chip active" data-geo="all">All Regions</div>' +
+        geoSorted.map(g => `<div class="filter-chip" data-geo="${escapeHtml(g)}">${escapeHtml(g)}</div>`).join('');
+
+      // Tag chips — top ~24 most frequent tags so the chip list stays manageable.
+      const tagCounts = new Map();
+      state.rawIncidents.forEach(inc => {
+        const tags = Array.isArray(inc.tags) ? inc.tags : [];
+        tags.forEach(t => {
+          const tag = String(t).trim();
+          if (!tag) return;
+          tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+        });
+      });
+      const topTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 24).map(e => e[0]);
+      const tagContainer = document.getElementById('filterContainerTags');
+      tagContainer.innerHTML = '<div class="filter-chip active" data-tag="all">All Tags</div>' +
+        topTags.map(t => `<div class="filter-chip" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</div>`).join('');
+
+      // Wire chip groups — multi-select for content filters, single-select for era/sort
+      bindMultiChipGroup('#filterContainerDeveloper', 'dev', 'developer');
+      bindMultiChipGroup('#filterContainerCategory',  'cat', 'category');
+      bindMultiChipGroup('#filterContainerGeography', 'geo', 'geography');
+      bindMultiChipGroup('#filterContainerTags',      'tag', 'tag');
+      bindMultiChipGroup('#filterContainerSource',    'src', 'source');
+      bindChipGroup('#filterContainerEra',            'era', 'era');
+      bindChipGroup('#filterContainerSort',           'sort', 'sort');
+    }
+
+    // Severity chips click
+    document.querySelectorAll('#filterContainerSeverity .filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('#filterContainerSeverity .filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        state.filters.severity = chip.dataset.sev;
+        filterAndProcessData();
+      });
+    });
+
+    // Reset filters button
+    document.getElementById('btnResetFilters').addEventListener('click', () => {
+      // Single-select resets
+      [
+        ['#filterContainerSeverity', 'sev',  'severity', 'all'],
+        ['#filterContainerEra',      'era',  'era',      'all'],
+        ['#filterContainerSort',     'sort', 'sort',     'severity']
+      ].forEach(([sel, attr, key, def]) => {
+        document.querySelectorAll(`${sel} .filter-chip`).forEach(c => c.classList.toggle('active', c.dataset[attr] === def));
+        state.filters[key] = def;
+      });
+      // Multi-select resets
+      [
+        ['#filterContainerDeveloper', 'dev', 'developer'],
+        ['#filterContainerCategory',  'cat', 'category'],
+        ['#filterContainerGeography', 'geo', 'geography'],
+        ['#filterContainerTags',      'tag', 'tag'],
+        ['#filterContainerSource',    'src', 'source']
+      ].forEach(([sel, attr, key]) => {
+        document.querySelectorAll(`${sel} .filter-chip`).forEach(c => c.classList.toggle('active', c.dataset[attr] === 'all'));
+        state.filters[key] = ['all'];
+      });
+      filterAndProcessData();
+    });
+
+    // Debounced search input handler
+    let searchDebounceTimeout;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      clearTimeout(searchDebounceTimeout);
+      searchDebounceTimeout = setTimeout(() => {
+        state.searchQuery = e.target.value.trim().toLowerCase();
+        filterAndProcessData();
+      }, 300);
+    });
+
+    // Filters all incidents on current state
+    function filterAndProcessData(isUpdate = false) {
+      const f = state.filters;
+
+      // Pre-parse era range once per call
+      let eraMin = null, eraMax = null;
+      if (f.era && f.era !== 'all') {
+        const m = f.era.match(/(\d{4})-(\d{4})/);
+        if (m) { eraMin = +m[1]; eraMax = +m[2]; }
+      }
+
+      state.filteredIncidents = state.rawIncidents.filter(inc => {
+        if (!state.allYears && inc.year > state.year) return false;
+        if (f.severity !== 'all' && inc.severity !== parseInt(f.severity, 10)) return false;
+        if (!f.developer.includes('all') && !f.developer.includes(inc.developer)) return false;
+        if (!f.category.includes('all') && !f.category.includes(inc.category)) return false;
+        if (!f.geography.includes('all')) {
+          const incGeoParts = (inc.geography || 'Global').split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
+          if (!f.geography.some(sel => incGeoParts.includes(sel))) return false;
+        }
+        if (!f.source.includes('all') && !f.source.includes(inc.source)) return false;
+        if (eraMin !== null && (inc.year < eraMin || inc.year > eraMax)) return false;
+        if (!f.tag.includes('all')) {
+          const tags = Array.isArray(inc.tags) ? inc.tags : [];
+          if (!f.tag.some(sel => tags.includes(sel))) return false;
+        }
+        return true;
+      });
+
+      console.log(`Filtered: ${state.filteredIncidents.length} incidents.`);
+      
+      // Update statistics values
+      updateStatsPanel();
+
+      // Build or update canvas particles
+      buildParticles(isUpdate);
+    }
+
+    // =========================================================================
+    // 2D Physics Layout & Morphing Engine
+    // =========================================================================
+    
+    function buildParticles(isUpdate = false) {
+      // Record previous display coordinates to prevent jump resets on morphing
+      const prevCoords = {};
+      particles.forEach(p => {
+        prevCoords[p.id] = { dispX: p.dispX, dispY: p.dispY, scale: p.scale };
+      });
+
+      // Keep previous particles list to handle exit animations
+      const prevParticles = [...particles];
+      particles.length = 0;
+
+      // Group active incidents by category
+      const byCat = {};
+      CATEGORIES.forEach(c => byCat[c.label] = []);
+      state.filteredIncidents.forEach(inc => {
+        if (byCat[inc.category]) {
+          byCat[inc.category].push(inc);
+        } else {
+          // fallback category
+          byCat[CATEGORIES[0].label].push(inc);
+        }
+      });
+
+      // Sort each category — sort order driven by the "Priority Sort" filter.
+      // The first element ends up at the spiral center, so this decides what reads as "important".
+      const sortMode = state.filters.sort || 'severity';
+      const sortCmp = sortMode === 'recent'
+        ? (a, b) => b.year - a.year || b.severity - a.severity
+        : sortMode === 'oldest'
+          ? (a, b) => a.year - b.year || b.severity - a.severity
+          : (a, b) => b.severity - a.severity || b.year - a.year;
+      Object.entries(byCat).forEach(([catLabel, arr]) => { arr.sort(sortCmp); });
+
+      // Total active count drives density-aware sizing decisions downstream
+      const totalActive = state.filteredIncidents.length;
+      state.densityMode = totalActive > 600;     // dim labels / skip edges when crowded
+      state.heavyMode   = totalActive > 2500;    // also disable spawn motion & exit tweens
+
+      // Group ONLY the finalized (sliced) category incidents by developer for Network coordinates (galaxy clusters!)
+      const byDev = {};
+      Object.values(byCat).forEach(arr => {
+        arr.forEach(inc => {
+          const devName = inc.developer || 'Unknown Developer';
+          if (!byDev[devName]) byDev[devName] = [];
+          byDev[devName].push(inc);
+        });
+      });
+
+      // Sort within each developer: oldest + most severe at the core
+      Object.values(byDev).forEach(arr => {
+        arr.sort((a, b) => a.year - b.year || b.severity - a.severity);
+      });
+
+      // Polar grid concentric coordinates solver to mathematically guarantee ZERO overlaps!
+      const dotSpacing = 16;  // Minimum distance between dots on canvas
+      const radialGap = 18;   // Minimum distance between concentric shell rings
+      
+      function getConcentricPos(idx) {
+        if (idx === 0) return { x: 0, y: 0 };
+        
+        let remaining = idx;
+        let shell = 1;
+        
+        while (true) {
+          const r = shell * radialGap;
+          // Circumference of shell divided by minimum dot spacing
+          const maxDots = Math.floor((2 * Math.PI * r) / dotSpacing);
+          const count = Math.max(6, maxDots);
+          
+          if (remaining <= count) {
+            const angle = ((remaining - 1) / count) * Math.PI * 2;
+            return {
+              x: Math.cos(angle) * r,
+              y: Math.sin(angle) * r
+            };
+          }
+          
+          remaining -= count;
+          shell++;
+        }
+      }
+
+      // Layout horizontal clusters in 3 rows for ultimate spacing and clickability
+      const cw = canvas.width / DPR;
+      const ch = canvas.height / DPR;
+      
+      // Determine active categories (containing visible items)
+      const activeCategories = CATEGORIES.filter(c => byCat[c.label].length > 0);
+      const gap = Math.max(480, cw * 0.38); // pushed further apart horizontally
+
+      // Cluster radius scales with sqrt(n) so dense categories grow without dominating the canvas.
+      // densityScale shrinks as totalActive grows so clusters remain visible within the viewport.
+      // sqrt(400/N) gives: scale=1 at N≤400, scale≈0.31 at N=4000, floor at 0.18.
+      const densityScale = Math.max(0.18, Math.min(1, Math.sqrt(400 / Math.max(1, totalActive))));
+      const baseScale = Math.min(cw, ch) * 0.045 * densityScale;
+      const dotPitch  = Math.max(1.6, baseScale * 0.60);
+      const radiusOf = (catLabel) => {
+        const n = byCat[catLabel].length;
+        if (n <= 0) return 0;
+        return Math.sqrt(n) * dotPitch + 14;
+      };
+
+      // Category Galaxies layout (Clusters mode) — non-overlapping packed placement
+      const catList = activeCategories.map(c => {
+        const r = radiusOf(c.label);
+        return {
+          label: c.label,
+          radius: r
+        };
+      }).sort((a, b) => b.radius - a.radius);
+
+      const catCenterX = cw / 2;
+      const catCenterY = ch * 0.5;
+      const catPlaced = [];
+      const catGalaxyPad = Math.max(20, dotPitch * 2.5);
+
+      catList.forEach(c => {
+        if (catPlaced.length === 0) {
+          c.cx = catCenterX;
+          c.cy = catCenterY;
+          catPlaced.push(c);
+          return;
+        }
+        // Search outward along a phyllotaxis lattice for the first non-overlapping slot
+        const probeStep = Math.max(12, dotPitch * 2.2);
+        for (let step = 1; step < 8000; step++) {
+          const r = Math.sqrt(step) * probeStep;
+          const a = step * GOLDEN;
+          const tx = catCenterX + Math.cos(a) * r;
+          const ty = catCenterY + Math.sin(a) * r;
+          let ok = true;
+          for (let i = 0; i < catPlaced.length; i++) {
+            const pl = catPlaced[i];
+            const dx = pl.cx - tx;
+            const dy = pl.cy - ty;
+            const minDist = pl.radius + c.radius + catGalaxyPad;
+            if (dx * dx + dy * dy < minDist * minDist) { ok = false; break; }
+          }
+          if (ok) {
+            c.cx = tx;
+            c.cy = ty;
+            catPlaced.push(c);
+            return;
+          }
+        }
+        c.cx = catCenterX;
+        c.cy = catCenterY;
+        catPlaced.push(c);
+      });
+
+      const clusterCentroids = {};
+      catList.forEach(c => {
+        clusterCentroids[c.label] = { cx: c.cx, cy: c.cy, radius: c.radius, scale: 1 };
+      });
+
+      state.clusterCentroids = clusterCentroids;
+
+      // Developer Galaxies layout (Network mode) — non-overlapping packed placement.
+      // Each developer's galaxy gets a radius based on its incident count, then we place
+      // them along an outward phyllotaxis spiral, skipping any spot that would overlap
+      // an already-placed galaxy. Largest galaxies get placed first (center-most).
+      const devNetPitch = Math.max(2.0, dotPitch * 0.55);
+      const devList = Object.entries(byDev)
+        .filter(([_, arr]) => arr.length > 0)
+        .map(([dev, arr]) => ({
+          dev,
+          count: arr.length,
+          radius: Math.sqrt(arr.length) * devNetPitch + 14
+        }))
+        .sort((a, b) => b.radius - a.radius);
+
+      // Cap named developer galaxies at top 150 by incident count.
+      // All overflow incidents go into a single visible "Other Developers" aggregate galaxy
+      // so they are never hidden behind a pile at canvas center.
+      const DEV_GALAXY_CAP = 150;
+      const devListCapped = devList.slice(0, DEV_GALAXY_CAP);
+
+      const otherDevKey = '__other__';
+      const otherIncidents = [];
+      devList.slice(DEV_GALAXY_CAP).forEach(d => {
+        byDev[d.dev].forEach(inc => otherIncidents.push(inc));
+      });
+      const otherIndexMap = new Map();
+      if (otherIncidents.length > 0) {
+        otherIncidents.sort((a, b) => b.severity - a.severity || a.year - b.year || a.id - b.id);
+        otherIncidents.forEach((inc, i) => otherIndexMap.set(inc.id, i));
+        devListCapped.push({
+          dev: otherDevKey,
+          count: otherIncidents.length,
+          radius: Math.sqrt(otherIncidents.length) * devNetPitch + 14
+        });
+        devListCapped.sort((a, b) => b.radius - a.radius);
+      }
+
+      const devCenterX = cw / 2;
+      const devCenterY = ch * 0.5;
+      const placed = [];
+      const galaxyPad = Math.max(16, devNetPitch * 4);
+
+      devListCapped.forEach(d => {
+        if (placed.length === 0) {
+          d.cx = devCenterX;
+          d.cy = devCenterY;
+          placed.push(d);
+          return;
+        }
+        // Search outward along a phyllotaxis lattice for the first non-overlapping slot.
+        const probeStep = Math.max(12, devNetPitch * 2.2);
+        for (let step = 1; step < 8000; step++) {
+          const r = Math.sqrt(step) * probeStep;
+          const a = step * GOLDEN;
+          const tx = devCenterX + Math.cos(a) * r;
+          const ty = devCenterY + Math.sin(a) * r;
+          let ok = true;
+          for (let i = 0; i < placed.length; i++) {
+            const pl = placed[i];
+            const dx = pl.cx - tx;
+            const dy = pl.cy - ty;
+            const minDist = pl.radius + d.radius + galaxyPad;
+            if (dx * dx + dy * dy < minDist * minDist) { ok = false; break; }
+          }
+          if (ok) {
+            d.cx = tx;
+            d.cy = ty;
+            placed.push(d);
+            return;
+          }
+        }
+        d.cx = devCenterX;
+        d.cy = devCenterY;
+        placed.push(d);
+      });
+
+      const devCentroids = {};
+      devListCapped.forEach(d => { devCentroids[d.dev] = { cx: d.cx, cy: d.cy }; });
+
+      // Group ONLY the active incidents by geography for Geography coordinates - sanitized & trimmed
+      const byGeo = {};
+      state.filteredIncidents.forEach(inc => {
+        const geoName = (inc.geography || '').trim() || 'Global';
+        if (!byGeo[geoName]) byGeo[geoName] = [];
+        byGeo[geoName].push(inc);
+      });
+      Object.values(byGeo).forEach(arr => {
+        arr.sort((a, b) => b.severity - a.severity || a.year - b.year);
+      });
+
+      // Geography World Map — build D3 Natural Earth projection sized to canvas
+      // Use generous margins to prevent dots from overflowing canvas edges
+      const geoMargin = { top: 60, right: 40, bottom: 80, left: 40 };
+      const geoAvailW = cw - geoMargin.left - geoMargin.right;
+      const geoAvailH = ch - geoMargin.top - geoMargin.bottom;
+      const geoScale = Math.min(geoAvailW / 5.6, geoAvailH / 3.0);
+      const geoProj = d3.geoNaturalEarth1()
+        .scale(geoScale)
+        .translate([cw / 2, ch * 0.48])
+        .clipExtent([[geoMargin.left, geoMargin.top], [cw - geoMargin.right, ch - geoMargin.bottom]]);
+      state._geoProjection = geoProj;
+
+      // Build centroids for labels: use the primary country of each geo group
+      const geoCentroids = {};
+      Object.entries(byGeo).forEach(([geo, arr]) => {
+        const countries = parseGeoCountries(geo);
+        const primaryCountry = countries[0];
+        const coords = GEO_COORDS[primaryCountry] || GEO_COORDS['Global'];
+        const projected = geoProj(coords);
+        if (projected) {
+          const scatterPx = countryScatterPx(primaryCountry, geoProj);
+          geoCentroids[geo] = {
+            cx: projected[0],
+            cy: projected[1],
+            radius: scatterPx * 0.6 + 4,
+            count: arr.length,
+            label: primaryCountry !== 'Global' ? primaryCountry : geo,
+          };
+        }
+      });
+      state.geographyCentroids = geoCentroids;
+
+      // Severity Centroids layout in dynamic non-overlapping triangular formation
+      const r3 = Math.sqrt(state.filteredIncidents.filter(i => i.severity === 3).length) * dotPitch * 1.3 + 24;
+      const r2 = Math.sqrt(state.filteredIncidents.filter(i => i.severity === 2).length) * dotPitch * 1.3 + 24;
+      const r1 = Math.sqrt(state.filteredIncidents.filter(i => i.severity === 1).length) * dotPitch * 1.3 + 24;
+
+      const sevGalaxyPad = Math.max(38, dotPitch * 4.5);
+      const maxPair = Math.max(r2 + r1, r3 + r2, r3 + r1);
+      // Math-driven spacing distance d from center to prevent pairwise overlaps completely
+      const d = Math.max(130, (maxPair + sevGalaxyPad) / 1.732);
+
+      const centerX = cw / 2;
+      const centerY = ch * 0.5;
+
+      const sevCentroids = {
+        3: { cx: centerX, cy: centerY - d, radius: r3, label: "SEV 3 (Critical)" },
+        2: { cx: centerX - d * 0.866, cy: centerY + d * 0.5, radius: r2, label: "SEV 2 (Moderate)" },
+        1: { cx: centerX + d * 0.866, cy: centerY + d * 0.5, radius: r1, label: "SEV 1 (Minor)" }
+      };
+      state.severityCentroids = sevCentroids;
+
+      const bySev = { 1: [], 2: [], 3: [] };
+      state.filteredIncidents.forEach(inc => {
+        if (bySev[inc.severity]) {
+          bySev[inc.severity].push(inc);
+        } else {
+          bySev[1].push(inc);
+        }
+      });
+      Object.values(bySev).forEach(arr => arr.sort((a, b) => a.year - b.year || a.developer.localeCompare(b.developer)));
+
+      // Group and sort by Year for Timeline view horizontal columns
+      const activeYears = [];
+      for (let y = YEAR_MIN; y <= YEAR_MAX; y++) {
+        activeYears.push(y);
+      }
+      const byYear = {};
+      activeYears.forEach(y => byYear[y] = []);
+      state.filteredIncidents.forEach(inc => {
+        const safeY = Math.max(YEAR_MIN, Math.min(YEAR_MAX, inc.year));
+        if (byYear[safeY]) {
+          byYear[safeY].push(inc);
+        }
+      });
+      Object.values(byYear).forEach(arr => arr.sort((a, b) => b.severity - a.severity || a.category.localeCompare(b.category)));
+
+      let maxInAnyYear = 1;
+      activeYears.forEach(y => {
+        if (byYear[y].length > maxInAnyYear) maxInAnyYear = byYear[y].length;
+      });
+
+      // Pre-build O(1) index maps to avoid O(N²) Array.indexOf calls inside particle loop
+      const devIndexMap = new Map();
+      Object.entries(byDev).forEach(([dev, arr]) => {
+        arr.forEach((inc, i) => devIndexMap.set(dev + ':' + inc.id, i));
+      });
+      const sevIndexMap = new Map();
+      Object.entries(bySev).forEach(([sev, arr]) => {
+        arr.forEach((inc, i) => sevIndexMap.set(sev + ':' + inc.id, i));
+      });
+      const yearIndexMap = new Map();
+      Object.entries(byYear).forEach(([year, arr]) => {
+        arr.forEach((inc, i) => yearIndexMap.set(year + ':' + inc.id, i));
+      });
+
+      // Map dynamic nodes
+      Object.entries(byCat).forEach(([catLabel, arr]) => {
+        const centroid = clusterCentroids[catLabel];
+        if (!centroid) return;
+
+        arr.forEach((inc, idx) => {
+          const catObj = CAT_BY_LABEL[catLabel];
+          const cColor = catObj ? catObj.color : '#777788';
+          const devColor = getDeveloperColor(inc.developer);
+          
+          // Phyllotaxis spiral — uses dotPitch (density-aware) so 10k nodes stay separated.
+          const angle = idx * GOLDEN;
+          const radiusMultiplier = Math.sqrt(idx + 0.5);
+
+          const phyX = centroid.cx + Math.cos(angle) * radiusMultiplier * dotPitch * centroid.scale;
+          const phyY = centroid.cy + Math.sin(angle) * radiusMultiplier * dotPitch * centroid.scale;
+
+          // Network coordinates inside its developer galaxy, also using density-aware pitch
+          let netX = cw / 2;
+          let netY = ch / 2;
+          const devKey = inc.developer || 'Unknown Developer';
+          const devCent = devCentroids[devKey];
+          if (devCent) {
+            const devNodeIdx = devIndexMap.get(devKey + ':' + inc.id) ?? 0;
+            const devNodeAngle = devNodeIdx * GOLDEN;
+            const devNodeRadius = Math.sqrt(devNodeIdx + 0.5) * devNetPitch;
+            netX = devCent.cx + Math.cos(devNodeAngle) * devNodeRadius;
+            netY = devCent.cy + Math.sin(devNodeAngle) * devNodeRadius;
+          } else {
+            // Overflow developer: place inside the "Other Developers" aggregate galaxy
+            const otherCent = devCentroids[otherDevKey];
+            if (otherCent) {
+              const otherIdx = otherIndexMap.get(inc.id) ?? 0;
+              const otherAngle = otherIdx * GOLDEN;
+              const otherRadius = Math.sqrt(otherIdx + 0.5) * devNetPitch;
+              netX = otherCent.cx + Math.cos(otherAngle) * otherRadius;
+              netY = otherCent.cy + Math.sin(otherAngle) * otherRadius;
+            }
+          }
+
+          // Severity coordinates inside its severity galaxy
+          let sevX = cw / 2;
+          let sevY = ch / 2;
+          const sevCent = sevCentroids[inc.severity];
+          if (sevCent) {
+            const sevNodeIdx = sevIndexMap.get(inc.severity + ':' + inc.id) ?? 0;
+            const sevNodeAngle = sevNodeIdx * GOLDEN;
+            const sevNodeRadius = Math.sqrt(sevNodeIdx + 0.5) * dotPitch * 1.1;
+            sevX = sevCent.cx + Math.cos(sevNodeAngle) * sevNodeRadius;
+            sevY = sevCent.cy + Math.sin(sevNodeAngle) * sevNodeRadius;
+          }
+
+          // Geography coordinates — project primary country onto world map, uniform random scatter
+          let geoX = cw / 2;
+          let geoY = ch / 2;
+          const geoKey = (inc.geography || '').trim() || 'Global';
+          const countries = parseGeoCountries(geoKey);
+          const primaryCountry = countries[0] || 'Global';
+          if (state._geoProjection) {
+            const coords = GEO_COORDS[primaryCountry] || GEO_COORDS['Global'];
+            const projected = state._geoProjection(coords);
+            if (projected) {
+              const scatterPx = countryScatterPx(primaryCountry, state._geoProjection);
+              const r1 = seededRand(inc.id * 13 + 1);
+              const r2 = seededRand(inc.id * 13 + 2);
+              const angle = r1 * Math.PI * 2;
+              const radius = Math.sqrt(r2) * scatterPx;
+              geoX = Math.max(10, Math.min(cw - 10, projected[0] + Math.cos(angle) * radius));
+              geoY = Math.max(10, Math.min(ch - 10, projected[1] + Math.sin(angle) * radius));
+            }
+          }
+
+          // Timeline coordinates
+          const safeYear = Math.max(YEAR_MIN, Math.min(YEAR_MAX, inc.year));
+          const timelinePadLeft = cw * 0.1;
+          const timelinePadRight = cw * 0.1;
+          const timelineColW = (cw - timelinePadLeft - timelinePadRight) / (activeYears.length - 1 || 1);
+          const yearNodeIdx = yearIndexMap.get(safeYear + ':' + inc.id) ?? 0;
+          const yearCount = byYear[safeYear].length;
+
+          // Stagger columns dynamically if too many points
+          const numSubCols = Math.max(1, Math.min(3, Math.ceil(maxInAnyYear / 20)));
+          const subColIdx = yearNodeIdx % numSubCols;
+          const rowIdx = Math.floor(yearNodeIdx / numSubCols);
+          const spacingY = Math.min(13, (ch * 0.58) / Math.max(1, Math.ceil(yearCount / numSubCols)));
+
+          const timelineX = timelinePadLeft + (safeYear - YEAR_MIN) * timelineColW + (subColIdx - (numSubCols - 1) / 2) * 9;
+          const timelineY = ch * 0.78 - rowIdx * spacingY;
+
+          // Dot size: ~1.6px floor, +severity, gently larger in sparse views
+          const pSize = Math.max(1.6, (1.4 + inc.severity * 0.9) * Math.min(1.4, densityScale * 1.6));
+
+          const p = {
+            id: inc.id,
+            incident: inc,
+            catLabel,
+            catColor: cColor,
+            devColor,
+            phyIdx: idx,
+            radius: pSize,
+            clusterX: phyX,
+            clusterY: phyY,
+            networkX: netX,
+            networkY: netY,
+            severityX: sevX,
+            severityY: sevY,
+            geographyX: geoX,
+            geographyY: geoY,
+            destCountry: primaryCountry,
+            timelineX: timelineX,
+            timelineY: timelineY,
+            dispX: phyX,
+            dispY: phyY,
+            scale: 0
+          };
+
+          // Retain previous on-screen position for smooth morphing; otherwise reveal in place via scale.
+          if (prevCoords[p.id]) {
+            p.dispX = prevCoords[p.id].dispX;
+            p.dispY = prevCoords[p.id].dispY;
+            p.scale = prevCoords[p.id].scale;
+          } else {
+            let spawnX = phyX;
+            let spawnY = phyY;
+            if (state.view === 'network') { spawnX = netX; spawnY = netY; }
+            else if (state.view === 'timeline') { spawnX = timelineX; spawnY = timelineY; }
+            else if (state.view === 'severity') { spawnX = sevX; spawnY = sevY; }
+            else if (state.view === 'geography') { spawnX = geoX; spawnY = geoY; }
+            
+            p.dispX = spawnX;
+            p.dispY = spawnY;
+            p.scale = 0;
+            p.revealAt = (performance.now() / 1000) + (state.heavyMode ? 0 : Math.random() * 0.5);
+          }
+          p.targetScale = 1;
+
+          particles.push(p);
+        });
+      });
+
+      // Shadow particles: one per secondary country in multi-country incidents.
+      // They live only in geography view (opacity gated by geographyOp in render).
+      if (state._geoProjection) {
+        const primaryMap = new Map();
+        particles.forEach(p => { if (!p.geoShadow) primaryMap.set(p.id, p); });
+
+        state.filteredIncidents.forEach(inc => {
+          const rawGeo = (inc.geography || '').trim() || 'Global';
+          const countries = parseGeoCountries(rawGeo);
+          if (countries.length <= 1) return;
+
+          const primary = primaryMap.get(inc.id);
+          if (!primary) return;
+
+          countries.slice(1).forEach((country, si) => {
+            const coords = GEO_COORDS[country];
+            if (!coords) return;
+            const projected = state._geoProjection(coords);
+            if (!projected) return;
+
+            const scatterPx = countryScatterPx(country, state._geoProjection);
+            const seed = inc.id * 31 + (si + 1) * 97;
+            const angle = seededRand(seed + 1) * Math.PI * 2;
+            const radius = Math.sqrt(seededRand(seed + 2)) * scatterPx;
+            const sx = Math.max(10, Math.min(cw - 10, projected[0] + Math.cos(angle) * radius));
+            const sy = Math.max(10, Math.min(ch - 10, projected[1] + Math.sin(angle) * radius));
+
+            const sid = `${inc.id}_s${si}`;
+            const shadow = {
+              id: sid, incident: inc, geoShadow: true,
+              catLabel: primary.catLabel, catColor: primary.catColor,
+              devColor: primary.devColor, radius: primary.radius,
+              destCountry: country,
+              // All layout positions = geo position so shadow stays on map in all views
+              clusterX: sx, clusterY: sy, networkX: sx, networkY: sy,
+              severityX: sx, severityY: sy, timelineX: sx, timelineY: sy,
+              geographyX: sx, geographyY: sy,
+              dispX: prevCoords[sid] ? prevCoords[sid].dispX : sx,
+              dispY: prevCoords[sid] ? prevCoords[sid].dispY : sy,
+              scale: prevCoords[sid] ? prevCoords[sid].scale : 0,
+              targetScale: 1,
+            };
+            particles.push(shadow);
+          });
+        });
+      }
+
+      // Fade-out for filtered-away particles — also driven by the render-loop lerp, not GSAP.
+      const activeIds = new Set(particles.map(p => p.id));
+      prevParticles.forEach(prevP => {
+        if (!activeIds.has(prevP.id) && prevP.scale > 0.02) {
+          prevP.targetScale = 0;
+          prevP.exiting = true;
+          particles.push(prevP);
+        }
+      });
+
+      // Group particles by destination country for a beautiful side-by-side grid layout in Geography view
+      if (state._geoProjection) {
+        const geoGroups = {};
+        particles.forEach(p => {
+          if (p.exiting) return;
+          const country = p.destCountry || 'Global';
+          if (!geoGroups[country]) geoGroups[country] = [];
+          geoGroups[country].push(p);
+        });
+
+        const geoCentroids = {};
+
+        // Helper to find GeoJSON feature by country name
+        function getGeoJSONFeature(countryName) {
+          if (!state.worldMapFeatures) return null;
+          const nameMap = {
+            'United States': 'United States of America',
+            'USA': 'United States of America',
+            'US': 'United States of America',
+            'United Kingdom': 'United Kingdom',
+            'UK': 'United Kingdom',
+            'Britain': 'United Kingdom',
+            'S Korea': 'South Korea',
+            'N Korea': 'North Korea',
+            'Korea': 'South Korea',
+            'Türkiye': 'Turkey',
+            'EU': 'Germany',
+            'Europe': 'France',
+            'Rep Ireland': 'Ireland',
+            'Republic of Ireland': 'Ireland',
+          };
+          const standardName = nameMap[countryName] || countryName;
+          return state.worldMapFeatures.features.find(f => {
+            const fName = (f.properties && f.properties.name || '').toLowerCase();
+            return fName === standardName.toLowerCase();
+          });
+        }
+
+        // For each country group, sort and lay them out inside their boundaries
+        Object.entries(geoGroups).forEach(([country, group]) => {
+          // Sort by severity desc, then year asc
+          group.sort((a, b) => b.incident.severity - a.incident.severity || a.incident.year - b.incident.year);
+
+          const N = group.length;
+          const maxRadius = Math.max(...group.map(p => p.radius));
+
+          // Base projected coordinates for the country
+          const coords = GEO_COORDS[country] || GEO_COORDS['Global'];
+          const projected = state._geoProjection(coords);
+          if (!projected) return;
+
+          let placedPoints = [];
+          let boundingBoxY1 = projected[1] + 15; // default fallback label offset
+
+          if (country === 'Global') {
+            // Layout homogeneously across all the oceans of the world map!
+            // Use safe margins to prevent overflow at edges
+            const safeMargin = 20;
+            const w = cw - safeMargin * 2;
+            const h = ch * 0.70;
+            const x0 = safeMargin;
+            const y0 = ch * 0.08;
+
+            let spacing = Math.sqrt((0.68 * w * h) / N);
+            spacing = Math.max(1.8, Math.min(40, spacing));
+
+            let candidates = [];
+            let attempts = 0;
+            if (state.worldMapFeatures && d3) {
+              while (candidates.length < N && attempts < 4) {
+                candidates = [];
+                for (let x = x0 + spacing / 2; x < x0 + w; x += spacing) {
+                  for (let y = y0 + spacing / 2; y < y0 + h; y += spacing) {
+                    // Clamp candidate coordinates to canvas bounds
+                    const cx = Math.max(safeMargin, Math.min(cw - safeMargin, x));
+                    const cy = Math.max(safeMargin, Math.min(ch - safeMargin, y));
+                    const c = state._geoProjection.invert([cx, cy]);
+                    if (c && !d3.geoContains(state.worldMapFeatures, c)) {
+                      // Filter out extreme latitudes for clean aesthetics
+                      if (c[1] < 74 && c[1] > -55) {
+                        candidates.push({ x: cx, y: cy });
+                      }
+                    }
+                  }
+                }
+                if (candidates.length < N) {
+                  spacing *= 0.8;
+                  attempts++;
+                }
+              }
+            }
+
+            // Distribute points evenly
+            if (candidates.length >= N) {
+              const step = candidates.length / N;
+              for (let i = 0; i < N; i++) {
+                placedPoints.push(candidates[Math.floor(i * step)]);
+              }
+            } else {
+              // Fallback to beautiful circle in the South Pacific Ocean if ocean bounds failed
+              for (let i = 0; i < N; i++) {
+                const angle = i * GOLDEN;
+                const radius = Math.sqrt(i + 0.5) * 0.72;
+                placedPoints.push({
+                  x: Math.max(safeMargin, Math.min(cw - safeMargin, projected[0] + Math.cos(angle) * radius)),
+                  y: Math.max(safeMargin, Math.min(ch - safeMargin, projected[1] + Math.sin(angle) * radius))
+                });
+              }
+            }
+            boundingBoxY1 = ch * 0.85;
+          } else {
+            const feature = getGeoJSONFeature(country);
+            if (feature && d3) {
+              try {
+                const path = d3.geoPath().projection(state._geoProjection);
+                const [[x0, y0], [x1, y1]] = path.bounds(feature);
+                boundingBoxY1 = y1;
+
+                const w = x1 - x0;
+                const h = y1 - y0;
+
+                // Estimate spacing to yield at least N candidate points inside the country polygon
+                let spacing = Math.sqrt((0.36 * w * h) / N);
+                spacing = Math.max(1.1, Math.min(20, spacing));
+
+                let candidates = [];
+                let attempts = 0;
+                while (candidates.length < N && attempts < 4) {
+                  candidates = [];
+                  for (let x = x0 + spacing / 2; x < x1; x += spacing) {
+                    for (let y = y0 + spacing / 2; y < y1; y += spacing) {
+                      const c = state._geoProjection.invert([x, y]);
+                      if (c && d3.geoContains(feature, c)) {
+                        candidates.push({ x, y });
+                      }
+                    }
+                  }
+                  if (candidates.length < N) {
+                    spacing *= 0.8;
+                    attempts++;
+                  }
+                }
+
+                // If we succeeded in finding candidates, distribute them evenly
+                if (candidates.length >= N) {
+                  const step = candidates.length / N;
+                  for (let i = 0; i < N; i++) {
+                    placedPoints.push(candidates[Math.floor(i * step)]);
+                  }
+                }
+              } catch (err) {
+                console.warn('Error in boundary point generation for country:', country, err);
+              }
+            }
+          }
+
+          // Fallback to standard neat square grid if no boundary layout was computed
+          if (placedPoints.length < N) {
+            placedPoints = [];
+            const cols = Math.max(1, Math.ceil(Math.sqrt(N)));
+            const rows = Math.ceil(N / cols);
+            const maxSpacing = Math.max(6.5, maxRadius * 2.3);
+            const scatterPx = countryScatterPx(country, state._geoProjection);
+            const maxGridWidth = Math.min(55, scatterPx * 1.2);
+            const spacing = Math.min(maxSpacing, maxGridWidth / Math.max(1, cols - 1));
+
+            for (let i = 0; i < N; i++) {
+              const col = i % cols;
+              const row = Math.floor(i / cols);
+              const offsetX = (col - (cols - 1) / 2) * spacing;
+              const offsetY = (row - (rows - 1) / 2) * spacing;
+              placedPoints.push({
+                x: Math.max(10, Math.min(cw - 10, projected[0] + offsetX)),
+                y: Math.max(10, Math.min(ch - 10, projected[1] + offsetY))
+              });
+            }
+            boundingBoxY1 = projected[1] + (rows / 2) * maxSpacing;
+          }
+
+          // Apply coordinates to the group particles
+          group.forEach((p, i) => {
+            const pt = placedPoints[i];
+            p.geographyX = pt.x;
+            p.geographyY = pt.y;
+
+            // Also update primary/shadow layout positions in the particle structure
+            if (p.geoShadow) {
+              p.clusterX = p.geographyX;
+              p.clusterY = p.geographyY;
+              p.networkX = p.geographyX;
+              p.networkY = p.geographyY;
+              p.severityX = p.geographyX;
+              p.severityY = p.geographyY;
+              p.timelineX = p.geographyX;
+              p.timelineY = p.geographyY;
+            }
+
+            // Sync initial position for newly spawned particles
+            if (!prevCoords[p.id]) {
+              if (state.view === 'geography') {
+                p.dispX = p.geographyX;
+                p.dispY = p.geographyY;
+              }
+            }
+          });
+
+          // Build a clean centroid for this country label sitting perfectly below the bounds
+          geoCentroids[country] = {
+            cx: projected[0],
+            cy: boundingBoxY1,
+            radius: maxRadius + 2,
+            count: N,
+            label: country,
+          };
+        });
+
+        state.geographyCentroids = geoCentroids;
+      }
+
+      // 4. Build sequential constellation links without slow force sim ticks!
+      buildEdges();
+    }
+
+    // Connects nodes sharing same developer or category in sequential chains.
+    // Skipped entirely above ~600 visible nodes — the lines turn into a hairball and tank FPS.
+    function buildEdges() {
+      edges.length = 0;
+      if (state.densityMode) return;
+
+      const activeParticles = particles.filter(p => p.scale > 0.05 && !p.exiting && !p.geoShadow);
+
+      const byCat = {};
+      activeParticles.forEach(p => {
+        (byCat[p.catLabel] = byCat[p.catLabel] || []).push(p);
+      });
+      Object.values(byCat).forEach(arr => {
+        for (let i = 0; i < arr.length - 1; i++) {
+          edges.push({ source: arr[i], target: arr[i + 1], isDev: false });
+        }
+      });
+
+      const byDev = {};
+      activeParticles.forEach(p => {
+        const dev = p.incident.developer;
+        if (!dev) return;
+        (byDev[dev] = byDev[dev] || []).push(p);
+      });
+      Object.values(byDev).forEach(arr => {
+        for (let i = 0; i < arr.length - 1; i++) {
+          edges.push({ source: arr[i], target: arr[i + 1], isDev: true });
+        }
+      });
+    }
+    // =========================================================================
+    // Core Rendering Loop & Animations
+    // =========================================================================
+    
+    let lastTime = performance.now();
+    let playTimer = 0;
+
+    function render(now) {
+      requestAnimationFrame(render);
+      const dt = Math.min(0.06, (now - lastTime) / 1000);
+      lastTime = now;
+
+      // Auto-timeline play step
+      if (state.playing) {
+        playTimer += dt * state.playSpeed;
+        if (playTimer >= 1.6) {
+          playTimer = 0;
+          let nextYear = state.year + 1;
+          if (nextYear > YEAR_MAX) {
+            state.playing = false;
+            document.getElementById('btnTimelinePlay').textContent = '▶';
+          } else {
+            setYear(nextYear);
+          }
+        }
+      }
+
+      // Handle smooth coordinate morphing tween for all views concurrently
+      const keys = ['clusters', 'network', 'timeline', 'severity', 'geography'];
+      keys.forEach(k => {
+        const target = state.view === k ? 1 : 0;
+        state.viewOpacities[k] += (target - state.viewOpacities[k]) * Math.min(1, dt * 6.5);
+      });
+
+      // Pre-calculate cursor transform ONCE per frame to prevent layout thrashing
+      const mouseTrans = transformCursor(state.mouseX, state.mouseY);
+
+      // Position morph + scale lerp (replaces per-particle GSAP tweens — required at 10k nodes)
+      const nowSec = now / 1000;
+      const scaleSpeed = Math.min(1, dt * 7);
+      const morphSpeed = Math.min(1, dt * 6.5);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        
+        let targetX = p.clusterX;
+        let targetY = p.clusterY;
+        if (state.view === 'network') {
+          targetX = p.networkX;
+          targetY = p.networkY;
+        } else if (state.view === 'timeline') {
+          targetX = p.timelineX;
+          targetY = p.timelineY;
+        } else if (state.view === 'severity') {
+          targetX = p.severityX;
+          targetY = p.severityY;
+        } else if (state.view === 'geography') {
+          targetX = p.geographyX;
+          targetY = p.geographyY;
+        }
+
+        p.dispX += (targetX - p.dispX) * morphSpeed;
+        p.dispY += (targetY - p.dispY) * morphSpeed;
+
+        const targetScale = p.targetScale ?? 1;
+        if (targetScale > 0 && p.revealAt && nowSec < p.revealAt) {
+          // not yet revealed
+        } else {
+          p.scale += (targetScale - p.scale) * scaleSpeed;
+          if (p.exiting && p.scale < 0.02) {
+            particles.splice(i, 1);
+          }
+        }
+      }
+
+      // Clear Canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Apply Pan & Zoom Viewport Transform
+      ctx.save();
+      ctx.translate(state.transform.x, state.transform.y);
+      ctx.scale(state.transform.k, state.transform.k);
+
+      // A. Cluster "halo" — only in Clusters view; fades out quickly when morphing.
+      const clustersOp = state.viewOpacities.clusters;
+      if (clustersOp > 0.02 && state.clusterCentroids) {
+        ctx.save();
+        ctx.globalAlpha = clustersOp;
+        Object.entries(state.clusterCentroids).forEach(([catLabel, centroid]) => {
+          const cat = CAT_BY_LABEL[catLabel];
+          const color = cat ? cat.color : '#888';
+          const grad = ctx.createRadialGradient(centroid.cx, centroid.cy, 0, centroid.cx, centroid.cy, centroid.radius * 1.1);
+          grad.addColorStop(0, color + '22');
+          grad.addColorStop(1, color + '00');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(centroid.cx, centroid.cy, centroid.radius * 1.1, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+      }
+
+      // Severity "halo" — only in Severity view; fades in/out beautifully.
+      const severityOp = state.viewOpacities.severity;
+      if (severityOp > 0.02 && state.severityCentroids) {
+        ctx.save();
+        ctx.globalAlpha = severityOp;
+        Object.entries(state.severityCentroids).forEach(([sev, centroid]) => {
+          const colors = { 3: '#e74c3c', 2: '#f39c12', 1: '#3498db' };
+          const color = colors[sev] || '#888';
+          const grad = ctx.createRadialGradient(centroid.cx, centroid.cy, 0, centroid.cx, centroid.cy, centroid.radius * 1.15);
+          grad.addColorStop(0, color + '1e');
+          grad.addColorStop(1, color + '00');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(centroid.cx, centroid.cy, centroid.radius * 1.15, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+      }
+
+      // Geography World Map — drawn in canvas space so it pans/zooms with the dots.
+      const geographyOp = state.viewOpacities.geography;
+      if (geographyOp > 0.02 && state.worldMapFeatures && state._geoProjection) {
+        ctx.save();
+        const geoPath = d3.geoPath().projection(state._geoProjection).context(ctx);
+
+        // Graticule grid lines
+        ctx.globalAlpha = geographyOp * 0.07;
+        ctx.strokeStyle = '#86868b';
+        ctx.lineWidth = 0.4;
+        ctx.beginPath();
+        geoPath(d3.geoGraticule()());
+        ctx.stroke();
+
+        // Country fills — very subtle blue wash
+        ctx.globalAlpha = geographyOp * 0.12;
+        ctx.fillStyle = '#0071e3';
+        ctx.beginPath();
+        geoPath(state.worldMapFeatures);
+        ctx.fill();
+
+        // Country borders — thicker and more opaque for ultimate shape definition
+        ctx.globalAlpha = geographyOp * 0.7;
+        ctx.strokeStyle = '#0071e3';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        if (state.worldMapMesh) {
+          geoPath(state.worldMapMesh);
+        } else {
+          geoPath(state.worldMapFeatures);
+        }
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      // B. Draw Faint Category Constellation Links (only in clusters view, sequential chains)
+      if (clustersOp > 0.02) {
+        ctx.save();
+        ctx.lineWidth = 0.38;
+        edges.forEach(edge => {
+          if (edge.isDev) return; // only category constellations in Cluster view
+          const a = edge.source;
+          const b = edge.target;
+          
+          const op = Math.min(a.scale, b.scale) * clustersOp;
+          if (op < 0.02) return;
+
+          ctx.strokeStyle = '#0071e3'; // Unified premium accent blue
+          ctx.globalAlpha = op * 0.08;
+
+          ctx.beginPath();
+          ctx.moveTo(a.dispX, a.dispY);
+          ctx.lineTo(b.dispX, b.dispY);
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      // 1. Draw Network Connections (Lines in Network layout - developer constellation links)
+      const networkOp = state.viewOpacities.network;
+      if (networkOp > 0.02) {
+        ctx.save();
+        ctx.lineWidth = 0.45;
+        edges.forEach(edge => {
+          if (!edge.isDev) return; // only draw developer lines in Network view
+          const a = edge.source;
+          const b = edge.target;
+          
+          let matchesSearch = true;
+          if (state.searchQuery) {
+            const matchA = a.incident.title.toLowerCase().includes(state.searchQuery) || a.incident.developer.toLowerCase().includes(state.searchQuery);
+            const matchB = b.incident.title.toLowerCase().includes(state.searchQuery) || b.incident.developer.toLowerCase().includes(state.searchQuery);
+            matchesSearch = matchA && matchB;
+          }
+
+          const op = Math.min(a.scale, b.scale) * networkOp * (matchesSearch ? 1 : 0.15);
+          if (op < 0.02) return;
+
+          ctx.strokeStyle = '#0071e3'; // Unified premium accent blue
+          ctx.globalAlpha = op * 0.12;
+
+          ctx.beginPath();
+          ctx.moveTo(a.dispX, a.dispY);
+          ctx.lineTo(b.dispX, b.dispY);
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      // C. Timeline Grid Guide Lines & Year Counters
+      const timelineOp = state.viewOpacities.timeline;
+      if (timelineOp > 0.02) {
+        ctx.save();
+        ctx.globalAlpha = timelineOp;
+        
+        const activeYears = [];
+        for (let y = YEAR_MIN; y <= YEAR_MAX; y++) activeYears.push(y);
+        
+        const cw = canvas.width / DPR;
+        const ch = canvas.height / DPR;
+        const timelinePadLeft = cw * 0.1;
+        const timelinePadRight = cw * 0.1;
+        const timelineColW = (cw - timelinePadLeft - timelinePadRight) / (activeYears.length - 1 || 1);
+
+        // Count particles per year in state.filteredIncidents
+        const byYearCount = {};
+        activeYears.forEach(y => byYearCount[y] = 0);
+        state.filteredIncidents.forEach(inc => {
+          if (byYearCount[inc.year] !== undefined) byYearCount[inc.year]++;
+        });
+
+        activeYears.forEach(year => {
+          const colX = timelinePadLeft + (year - YEAR_MIN) * timelineColW;
+          
+          // Draw subtle vertical grid line
+          ctx.strokeStyle = 'var(--gray-border-dark)';
+          ctx.lineWidth = 0.5;
+          ctx.setLineDash([3, 4]);
+          ctx.beginPath();
+          ctx.moveTo(colX, ch * 0.16);
+          ctx.lineTo(colX, ch * 0.79);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Draw year number at bottom of canvas
+          ctx.textBaseline = 'top';
+          ctx.font = '600 10px var(--font-mono)';
+          ctx.fillStyle = year === state.year && !state.allYears ? 'var(--ink)' : 'var(--gray-text)';
+          ctx.textAlign = 'center';
+          ctx.fillText(year, colX, ch * 0.81);
+
+          // Draw count of incidents above columns
+          const count = byYearCount[year];
+          if (count > 0) {
+            ctx.textBaseline = 'bottom';
+            ctx.font = '600 9px var(--font-mono)';
+            ctx.fillStyle = 'var(--gray-text)';
+            ctx.fillText(count, colX, ch * 0.14);
+          }
+        });
+        
+        ctx.restore();
+      }
+
+      // 2. Same-developer connections on Hover (Clusters view).
+      // Cap at 60 links so hovering inside a giant developer cohort doesn't draw 10k lines.
+      if (state.hoveredNode && clustersOp > 0.02) {
+        const hNode = state.hoveredNode;
+        const hDev = hNode.incident.developer;
+        if (hDev) {
+          ctx.lineWidth = 0.8;
+          ctx.strokeStyle = hNode.devColor || '#0071e3';
+          ctx.globalAlpha = 0.5 * clustersOp;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          let drawn = 0;
+          for (let i = 0; i < particles.length && drawn < 60; i++) {
+            const p = particles[i];
+            if (p.id !== hNode.id && p.incident.developer === hDev && p.scale > 0.05) {
+              ctx.moveTo(hNode.dispX, hNode.dispY);
+              ctx.lineTo(p.dispX, p.dispY);
+              drawn++;
+            }
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // 3. Draw Category Cluster Labels — only in Clusters view
+      if (clustersOp > 0.02 && state.clusterCentroids) {
+        ctx.save();
+        ctx.globalAlpha = clustersOp * 0.55;
+        ctx.textBaseline = 'middle';
+        ctx.font = '600 10.5px -apple-system, sans-serif';
+        ctx.fillStyle = '#1d1d1f';
+        ctx.textAlign = 'center';
+
+        Object.entries(state.clusterCentroids).forEach(([lbl, centroid]) => {
+          ctx.fillText(lbl.toUpperCase(), centroid.cx, centroid.cy + centroid.radius + 18);
+        });
+        ctx.restore();
+      }
+
+      // Severity labels
+      if (severityOp > 0.02 && state.severityCentroids) {
+        ctx.save();
+        ctx.globalAlpha = severityOp * 0.65;
+        ctx.textBaseline = 'middle';
+        ctx.font = '600 11px -apple-system, sans-serif';
+        ctx.fillStyle = '#1d1d1f';
+        ctx.textAlign = 'center';
+
+        Object.entries(state.severityCentroids).forEach(([sev, centroid]) => {
+          ctx.fillText(centroid.label.toUpperCase(), centroid.cx, centroid.cy + centroid.radius + 20);
+        });
+        ctx.restore();
+      }
+
+
+
+      // 4. Draw expanding rings pulse on selected or hovered node
+      const pulseNode = state.hoveredNode || state.selectedNode;
+      if (pulseNode && pulseNode.scale > 0.05) {
+        const ringColor = pulseNode.devColor; // Match company color!
+        const ringTime = now / 1000;
+        
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = ringColor;
+
+        for (let i = 0; i < 3; i++) {
+          const pulseAge = (ringTime * 0.7 + i * 0.33) % 1; // 0 to 1
+          const r = pulseNode.radius + pulseAge * 22;
+          const alpha = (1 - pulseAge) * 0.48 * pulseNode.scale;
+
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.arc(pulseNode.dispX, pulseNode.dispY, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // 5. Draw Particles. Each node is colored by its category (informative at scale).
+      // Texture lookups are bucketed by quantized radius so the cache stays small at 10k nodes.
+      const hoveredId = state.hoveredNode ? state.hoveredNode.id : null;
+      const selectedId = state.selectedNode ? state.selectedNode.id : null;
+      const q = state.searchQuery;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        if (p.scale < 0.02) continue;
+        // Shadow particles are only visible during geography view
+        if (p.geoShadow && geographyOp < 0.02) continue;
+
+        let highlighted = true;
+        if (q) {
+          highlighted = p.incident._search ? p.incident._search.indexOf(q) !== -1 : true;
+        }
+        const shadowFade = p.geoShadow ? geographyOp : 1;
+        ctx.globalAlpha = p.scale * (highlighted ? 1 : 0.12) * shadowFade;
+
+        const isSelfHover = (p.id === hoveredId) || (p.id === selectedId);
+        // Dynamically shrink dots in geography view so the map shape stays clear and readable
+        const shrinkFactor = 1 - 0.45 * geographyOp;
+        const radius = (isSelfHover ? p.radius * 1.45 : p.radius) * shrinkFactor;
+        const nodeColor = state.colorMode === 'developer' ? p.devColor : p.catColor;
+        const tex = textureCache.get(nodeColor, radius, isSelfHover);
+        ctx.drawImage(tex.canvas, p.dispX - tex.offset, p.dispY - tex.offset);
+      }
+
+      ctx.globalAlpha = 1;
+      ctx.restore(); // restore viewport transform
+
+      // Custom cursor ring drawn in screen space
+      if (state.mouseX !== -9999) {
+        if (state.cursorX === undefined || state.cursorX === -9999) {
+          state.cursorX = state.mouseX;
+          state.cursorY = state.mouseY;
+          state.cursorVx = 0;
+          state.cursorVy = 0;
+          state.cursorTrail = [];
+        }
+
+        const rect = canvas.getBoundingClientRect();
+
+        // 1. Physical Lagrangian spring easing for follower coordinates
+        const spring = 0.18;
+        const friction = 0.65;
+        const ax = (state.mouseX - state.cursorX) * spring;
+        const ay = (state.mouseY - state.cursorY) * spring;
+        state.cursorVx = (state.cursorVx + ax) * friction;
+        state.cursorVy = (state.cursorVy + ay) * friction;
+        state.cursorX += state.cursorVx;
+        state.cursorY += state.cursorVy;
+
+        // Record trailing coordinates
+        state.cursorTrail.push({ x: state.cursorX, y: state.cursorY });
+        if (state.cursorTrail.length > 8) {
+          state.cursorTrail.shift();
+        }
+
+        // Translate screen positions to canvas logical coordinates (DPR transform is already active)
+        const pmx = (state.mouseX - rect.left);
+        const pmy = (state.mouseY - rect.top);
+        const pcx = (state.cursorX - rect.left);
+        const pcy = (state.cursorY - rect.top);
+
+        const isHover = !!state.hoveredNode;
+        let nodeColor = '#0071e3';
+        if (isHover) {
+          nodeColor = state.colorMode === 'developer' ? state.hoveredNode.devColor : state.hoveredNode.catColor;
+        }
+
+        // A. Draw Glowing Stardust Trail
+        if (state.cursorTrail && state.cursorTrail.length > 0) {
+          ctx.save();
+          for (let i = 0; i < state.cursorTrail.length; i++) {
+            const pt = state.cursorTrail[i];
+            const ptx = (pt.x - rect.left);
+            const pty = (pt.y - rect.top);
+            const ageRatio = i / state.cursorTrail.length; // 0 (oldest) to 1 (newest)
+            
+            ctx.fillStyle = isHover ? nodeColor : '#0071e3';
+            ctx.globalAlpha = ageRatio * 0.14;
+            const tr = (1.5 + ageRatio * 2.5);
+            ctx.beginPath();
+            ctx.arc(ptx, pty, tr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        // B. Draw Precision Target Dot
+        ctx.save();
+        // Shadow base
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.beginPath();
+        ctx.arc(pmx, pmy, isHover ? 4.5 : 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        // Main dot
+        ctx.fillStyle = isHover ? nodeColor : '#ffffff';
+        ctx.beginPath();
+        ctx.arc(pmx, pmy, isHover ? 3.2 : 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // C. Draw Follower Ring with Easing, Pulse and Squash/Stretch
+        const targetR = isHover ? 17 : (state.isDragging ? 7 : 10);
+        if (state.cursorR === undefined) state.cursorR = 10;
+        state.cursorR += (targetR - state.cursorR) * 0.15;
+
+        const speed = Math.sqrt(state.cursorVx * state.cursorVx + state.cursorVy * state.cursorVy);
+        const breathe = isHover ? 0 : Math.cos(now / 280) * 0.7;
+        const currentR = state.cursorR + breathe;
+        const angle = Math.atan2(state.cursorVy, state.cursorVx);
+
+        ctx.save();
+        ctx.translate(pcx, pcy);
+        if (speed > 0.5) {
+          ctx.rotate(angle);
+        }
+
+        // Scale along velocity axis (squash & stretch)
+        const stretch = 1 + Math.min(0.4, speed * 0.025);
+        const squash = 1 / stretch;
+        ctx.scale(stretch, squash);
+
+        // Neon Thick Backstroke Glow
+        ctx.lineWidth = 5;
+        let ringColor = 'rgba(255, 255, 255, 0.9)';
+        if (isHover) {
+          ringColor = nodeColor;
+        } else if (state.isDragging) {
+          ringColor = '#0071e3';
+        }
+        ctx.strokeStyle = ringColor;
+        ctx.globalAlpha = isHover ? 0.28 : 0.12;
+        ctx.beginPath();
+        ctx.arc(0, 0, currentR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Contrast Black Shadow Backing Outline
+        ctx.globalAlpha = 0.45;
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.beginPath();
+        ctx.arc(0, 0, currentR + 1, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Premium Main Follower Ring
+        ctx.globalAlpha = 1.0;
+        ctx.strokeStyle = ringColor;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, currentR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+
+        // D. Draw Rotating Dashed Outer Reticle (on Hover only)
+        if (isHover) {
+          ctx.save();
+          ctx.translate(pcx, pcy);
+          ctx.rotate(now / 800);
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = nodeColor;
+          ctx.globalAlpha = 0.5;
+          ctx.setLineDash([4, 6]);
+          ctx.beginPath();
+          ctx.arc(0, 0, currentR + 4, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      } else {
+        state.cursorX = -9999;
+        state.cursorY = -9999;
+        state.cursorVx = 0;
+        state.cursorVy = 0;
+        state.cursorTrail = [];
+      }
+
+      // Hit testing: O(N) linear scan, but skipped if mouse hasn't moved since last test.
+      // At 10k a per-frame scan is ~0.2ms — fine, and avoids the quadtree rebuild cost.
+      if (state.mouseX !== -9999 && (state.mouseDirty || !state.hoveredNode)) {
+        state.mouseDirty = false;
+        let currentHovered = null;
+        let bestR = -1;
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          if (p.scale < 0.4) continue;
+          const dx = p.dispX - mouseTrans.x;
+          const dy = p.dispY - mouseTrans.y;
+          
+          // Shrink factor in geography view affects the visual size of the dot
+          const shrinkFactor = 1 - 0.45 * geographyOp;
+          const currentRadius = p.radius * shrinkFactor;
+          
+          // Keep clickable area at a generous constant size on screen (at least 6.5 screen pixels)
+          const hitR = Math.max(6.5, currentRadius + 5) / state.transform.k;
+          
+          if (dx * dx + dy * dy <= hitR * hitR && p.radius > bestR) {
+            currentHovered = p;
+            bestR = p.radius;
+          }
+        }
+        if (currentHovered !== state.hoveredNode) {
+          state.hoveredNode = currentHovered;
+          drawHoverTooltip();
+        }
+      }
+    }
+
+    // Translates screen coordinates to canvas pan & zoom coordinates
+    function transformCursor(screenX, screenY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (screenX - rect.left) - state.transform.x;
+      const y = (screenY - rect.top) - state.transform.y;
+      return {
+        x: x / state.transform.k,
+        y: y / state.transform.k
+      };
+    }
+
+    // =========================================================================
+    // UI Interaction, Tooltips & Selected Cards
+    // =========================================================================
+    
+    // Draw card tooltip on Hover
+    const tooltipEl = document.getElementById('tooltip');
+    function drawHoverTooltip() {
+      if (!state.hoveredNode || state.selectedNode) {
+        tooltipEl.style.display = 'none';
+        canvas.style.cursor = state.isDragging ? CURSOR_GRABBING : CURSOR_GRAB;
+        return;
+      }
+
+      const p = state.hoveredNode;
+      const inc = p.incident;
+      const severityDots = [1, 2, 3].map(s => `<span class="dot ${s <= inc.severity ? 'active' : ''}"></span>`).join('');
+      
+      const resolvedUrl = resolveSourceUrl(inc);
+      const sourceUrlBadge = resolvedUrl ? `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener" class="t-link">Source ↗</a>` : '';
+
+      tooltipEl.innerHTML = `
+        <div class="t-title">${escapeHtml(inc.title)}</div>
+        <div class="t-badges">
+          <span class="t-badge dev">${escapeHtml(inc.developer)}</span>
+          <span class="t-badge cat">${escapeHtml(inc.category)}</span>
+          <span class="t-badge">${inc.year}</span>
+        </div>
+        <div class="t-description">${escapeHtml(cleanDescription(inc.description).substring(0, 140))}…</div>
+        <div class="t-footer">
+          <div class="t-severity"><span class="lbl">SEV</span>${severityDots}</div>
+          ${sourceUrlBadge}
+        </div>
+      `;
+
+      tooltipEl.style.display = 'block';
+      canvas.style.cursor = 'pointer';
+      
+      // Position tooltip nicely near mouse
+      const tipRect = tooltipEl.getBoundingClientRect();
+      let tx = state.mouseX + 16;
+      let ty = state.mouseY + 16;
+
+      if (tx + tipRect.width > window.innerWidth - 12) tx = state.mouseX - tipRect.width - 16;
+      if (ty + tipRect.height > window.innerHeight - 12) ty = state.mouseY - tipRect.height - 16;
+
+      tooltipEl.style.left = `${tx}px`;
+      tooltipEl.style.top = `${ty}px`;
+    }
+
+    // Click details card locking
+    const lockedCardEl = document.getElementById('lockedCard');
+    function lockSelectedNode(p) {
+      state.selectedNode = p;
+      tooltipEl.style.display = 'none';
+
+      if (!p) {
+        lockedCardEl.classList.remove('active');
+        setTimeout(() => {
+          if (!state.selectedNode) {
+            lockedCardEl.style.display = 'none';
+          }
+        }, 300);
+        return;
+      }
+
+      const inc = p.incident;
+      document.getElementById('lockedTitle').textContent = inc.title;
+      
+      // Display initial snippet, then fetch full text dynamically (on-demand)
+      document.getElementById('lockedDescription').textContent = cleanDescription(inc.description) + ' …';
+
+      fetch(`/api/incidents/${inc.id}`)
+        .then(res => res.json())
+        .then(fullInc => {
+          if (state.selectedNode && state.selectedNode.incident.id === inc.id) {
+            document.getElementById('lockedDescription').textContent = cleanDescription(fullInc.description);
+            const fullUrl = resolveSourceUrl(fullInc);
+            if (fullUrl) {
+              linkEl.href = fullUrl;
+              linkEl.rel = 'noopener';
+              linkEl.style.display = 'block';
+            }
+          }
+        })
+        .catch(err => {
+          console.error('On-demand description fetch failed:', err.message);
+          if (state.selectedNode && state.selectedNode.incident.id === inc.id) {
+            document.getElementById('lockedDescription').textContent = cleanDescription(inc.description);
+          }
+        });
+      
+      document.getElementById('lockedBadges').innerHTML = `
+        <span class="t-badge dev">${escapeHtml(inc.developer)}</span>
+        <span class="t-badge cat">${escapeHtml(inc.category)}</span>
+        <span class="t-badge">${inc.year}</span>
+        <span class="t-badge" style="background:#e3f2fd">${escapeHtml(inc.geography)}</span>
+      `;
+
+      const severityDots = [1, 2, 3].map(s => `<span class="dot ${s <= inc.severity ? 'active' : ''}"></span>`).join('');
+      document.getElementById('lockedSeverity').innerHTML = `<span class="lbl">SEV</span>${severityDots}`;
+
+      const linkEl = document.getElementById('lockedSourceLink');
+      const lockedUrl = resolveSourceUrl(inc);
+      if (lockedUrl) {
+        linkEl.href = lockedUrl;
+        linkEl.rel = 'noopener';
+        linkEl.style.display = 'block';
+      } else {
+        linkEl.removeAttribute('href');
+        linkEl.style.display = 'none';
+      }
+
+      lockedCardEl.style.display = 'block';
+      // Force DOM reflow to trigger transition
+      lockedCardEl.offsetHeight;
+      lockedCardEl.classList.add('active');
+
+      // Camera Fly-To: rAF lerp pan & zoom to center on selected node
+      const cw = canvas.width / DPR;
+      const ch = canvas.height / DPR;
+      
+      // On desktop, offset focus to the right so the details card on the left doesn't obscure the dot
+      const isDesktop = window.innerWidth >= 992;
+      const targetCenterX = isDesktop ? (cw / 2) + 170 : (cw / 2);
+      
+      const targetX = targetCenterX - p.dispX * 2.4;
+      const targetY = (ch / 2) - p.dispY * 2.4;
+      const targetK = 2.4;
+      const flyStart = performance.now();
+      const flyDur = 950;
+      const startX = state.transform.x, startY = state.transform.y, startK = state.transform.k;
+      function flyTick(now) {
+        const t = Math.min(1, (now - flyStart) / flyDur);
+        const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // ease in-out quad
+        state.transform.x = startX + (targetX - startX) * e;
+        state.transform.y = startY + (targetY - startY) * e;
+        state.transform.k = startK + (targetK - startK) * e;
+        if (t < 1) requestAnimationFrame(flyTick);
+      }
+      requestAnimationFrame(flyTick);
+    }
+
+    document.getElementById('btnLockedClose').addEventListener('click', () => lockSelectedNode(null));
+
+    // =========================================================================
+    // Sidebar drawers control filters & stats panels
+    // =========================================================================
+    
+    function setupDrawers() {
+      // Filters panel
+      const filtersPanel = document.getElementById('filter-panel');
+      document.getElementById('btnToggleFilters').addEventListener('click', () => {
+        filtersPanel.classList.toggle('collapsed');
+      });
+      document.getElementById('btnCloseFilters').addEventListener('click', () => {
+        filtersPanel.classList.add('collapsed');
+      });
+
+      // Stats panel
+      const statsPanel = document.getElementById('stats-panel');
+      document.getElementById('btnToggleStats').addEventListener('click', () => {
+        statsPanel.classList.toggle('collapsed');
+      });
+      document.getElementById('btnCloseStats').addEventListener('click', () => {
+        statsPanel.classList.add('collapsed');
+      });
+    }
+
+    // Helper: count frequencies, return [key, count] pairs sorted by count desc
+    function topCounts(list, accessor, limit = 5) {
+      const m = new Map();
+      for (let i = 0; i < list.length; i++) {
+        const v = accessor(list[i]);
+        if (!v) continue;
+        if (Array.isArray(v)) {
+          for (const x of v) m.set(x, (m.get(x) || 0) + 1);
+        } else {
+          m.set(v, (m.get(v) || 0) + 1);
+        }
+      }
+      return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit);
+    }
+
+    function renderLeaderboard(elId, pairs, totalForPct, colorFn) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      if (pairs.length === 0) {
+        el.innerHTML = '<div style="font-size:10px;color:var(--gray-text);opacity:0.6;">No data</div>';
+        return;
+      }
+      el.innerHTML = pairs.map(([name, count]) => {
+        const pct = Math.round((count / totalForPct) * 100);
+        const color = colorFn ? colorFn(name) : '#0071e3';
+        return `
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="display:flex;justify-content:space-between;font-size:10.5px;">
+              <span style="color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+              <span style="font-family:var(--font-mono);color:var(--gray-text);">${count} · ${pct}%</span>
+            </div>
+            <div class="stat-bar-bg" style="height:3px;">
+              <div class="stat-bar-fill" style="background:${color};width:${pct}%;"></div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Refresh dynamic stats displays
+    function updateStatsPanel() {
+      const list = state.filteredIncidents;
+      const total = list.length || 1;
+      document.getElementById('statValTotal').textContent = list.length;
+
+      // Severity counts + average score (single pass)
+      let s1 = 0, s2 = 0, s3 = 0, sevSum = 0;
+      const yearCounts = new Map();
+      let maxY = -Infinity;
+      for (let i = 0; i < list.length; i++) {
+        const it = list[i];
+        const s = it.severity;
+        sevSum += s;
+        if (s === 3) s3++; else if (s === 2) s2++; else if (s === 1) s1++;
+        const y = it.year;
+        yearCounts.set(y, (yearCounts.get(y) || 0) + 1);
+        if (y > maxY) maxY = y;
+      }
+
+      const p3 = Math.round((s3 / total) * 100);
+      const p2 = Math.round((s2 / total) * 100);
+      const p1 = Math.round((s1 / total) * 100);
+      document.getElementById('statPctSev3').textContent = `${p3}%`;
+      document.getElementById('statPctSev2').textContent = `${p2}%`;
+      document.getElementById('statPctSev1').textContent = `${p1}%`;
+      document.getElementById('statFillSev3').style.width = `${p3}%`;
+      document.getElementById('statFillSev2').style.width = `${p2}%`;
+      document.getElementById('statFillSev1').style.width = `${p1}%`;
+      document.getElementById('statValAvgSev').textContent = list.length ? (sevSum / list.length).toFixed(2) : '0.0';
+
+      // Most affected group (skip generic "General Public")
+      const groupPairs = topCounts(
+        list.filter(i => i.affected_group && i.affected_group !== 'General Public' && i.affected_group !== 'General'),
+        i => i.affected_group, 1
+      );
+      document.getElementById('statValAffected').textContent = groupPairs[0] ? groupPairs[0][0] : 'General Public';
+
+      // Peak year
+      let peakYear = '—', peakCount = -1;
+      yearCounts.forEach((c, y) => { if (c > peakCount) { peakCount = c; peakYear = y; } });
+      document.getElementById('statValPeak').textContent = peakYear;
+
+      // YoY delta + current-year count, anchored to scrubber position (or latest)
+      const refYear = state.allYears ? maxY : state.year;
+      const curCount = yearCounts.get(refYear) || 0;
+      const prevCount = yearCounts.get(refYear - 1) || 0;
+      let yoyText = '—', yoyColor = 'var(--ink)';
+      if (prevCount > 0) {
+        const delta = curCount - prevCount;
+        const pct = Math.round((delta / prevCount) * 100);
+        yoyText = `${delta >= 0 ? '+' : ''}${pct}%`;
+        yoyColor = delta > 0 ? '#e74c3c' : (delta < 0 ? '#1ea985' : 'var(--ink)');
+      } else if (curCount > 0) {
+        yoyText = 'new';
+        yoyColor = '#e74c3c';
+      }
+      const yoyEl = document.getElementById('statValYoY');
+      yoyEl.textContent = yoyText;
+      yoyEl.style.color = yoyColor;
+      document.getElementById('statValRecent').textContent = curCount;
+
+      // Top developers / categories / regions - normalized Geography access
+      const devPairs = topCounts(list, i => i.developer, 5);
+      const catPairs = topCounts(list, i => i.category, 5);
+      const geoPairs = topCounts(list, i => (i.geography || '').trim() || 'Global', 5);
+
+      document.getElementById('statValTopDev').textContent    = devPairs[0] ? devPairs[0][0] : '—';
+      document.getElementById('statValTopCat').textContent    = catPairs[0] ? catPairs[0][0] : '—';
+      document.getElementById('statValTopRegion').textContent = geoPairs[0] ? geoPairs[0][0] : '—';
+
+      const uniqueDevs = new Set();
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].developer) uniqueDevs.add(list[i].developer);
+      }
+      document.getElementById('statValUniqueDevs').textContent = uniqueDevs.size;
+
+      renderLeaderboard('statListDevs',    devPairs, total, getDeveloperColor);
+      renderLeaderboard('statListCats',    catPairs, total, name => (CAT_BY_LABEL[name] && CAT_BY_LABEL[name].color) || '#0071e3');
+      renderLeaderboard('statListRegions', geoPairs, total);
+    }
+
+    // =========================================================================
+    // Viewport Navigation (Mouse Panning, Zooming)
+    // =========================================================================
+    
+    function resetViewport(immediate = false) {
+      if (immediate) {
+        state.transform.x = 0;
+        state.transform.y = 0;
+        state.transform.k = 1;
+      } else {
+        const start = performance.now();
+        const from = { x: state.transform.x, y: state.transform.y, k: state.transform.k };
+        function tick(now) {
+          const t = Math.min(1, (now - start) / 800);
+          const e = 1 - Math.pow(1 - t, 3); // cubic ease-out
+          state.transform.x = from.x + (0 - from.x) * e;
+          state.transform.y = from.y + (0 - from.y) * e;
+          state.transform.k = from.k + (1 - from.k) * e;
+          if (t < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      }
+      lockSelectedNode(null);
+    }
+
+    function setupViewportControls() {
+      const _activePointers = new Map(); // pointerId → {x, y}
+      let _pinchDist0 = 0, _pinchMid0 = null, _pinchTransform0 = null;
+      const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
+
+      // Suppress animated cursor ring on touch screens
+      if (isTouchDevice()) {
+        canvas.style.cursor = 'default';
+      }
+
+      // 1. Pointer Down: drag start OR pinch start
+      canvas.addEventListener('pointerdown', (e) => {
+        canvas.setPointerCapture(e.pointerId);
+        _activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (_activePointers.size === 2) {
+          // Pinch start: record initial distance and midpoint
+          const pts = [..._activePointers.values()];
+          const dx = pts[1].x - pts[0].x;
+          const dy = pts[1].y - pts[0].y;
+          _pinchDist0 = Math.hypot(dx, dy);
+          _pinchMid0 = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+          _pinchTransform0 = { ...state.transform };
+          state.isDragging = false;
+          return;
+        }
+
+        // Single pointer: drag start threshold
+        state.isDragging = false;
+        state.dragStartPointer = { x: e.clientX, y: e.clientY };
+        state.dragStartTransform = { x: state.transform.x, y: state.transform.y };
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        if (_activePointers.has(e.pointerId)) {
+          _activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        }
+
+        if (_activePointers.size === 2) {
+          // Pinch zoom
+          const pts = [..._activePointers.values()];
+          const dx = pts[1].x - pts[0].x;
+          const dy = pts[1].y - pts[0].y;
+          const dist = Math.hypot(dx, dy);
+          const scale = dist / _pinchDist0;
+          const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+
+          const rect = canvas.getBoundingClientRect();
+          const mx = _pinchMid0.x - rect.left;
+          const my = _pinchMid0.y - rect.top;
+          const wx = (mx - _pinchTransform0.x) / _pinchTransform0.k;
+          const wy = (my - _pinchTransform0.y) / _pinchTransform0.k;
+
+          const newK = Math.max(0.2, Math.min(6, _pinchTransform0.k * scale));
+          const panDx = mid.x - _pinchMid0.x;
+          const panDy = mid.y - _pinchMid0.y;
+
+          state.transform.k = newK;
+          state.transform.x = mx - wx * newK + panDx;
+          state.transform.y = my - wy * newK + panDy;
+          return;
+        }
+
+        if (!isTouchDevice()) {
+          state.mouseX = e.clientX;
+          state.mouseY = e.clientY;
+          state.mouseDirty = true;
+          drawHoverTooltip();
+        }
+
+        if (_activePointers.size === 1 && state.dragStartPointer) {
+          const dx = e.clientX - state.dragStartPointer.x;
+          const dy = e.clientY - state.dragStartPointer.y;
+          if (!state.isDragging && Math.hypot(dx, dy) > 4) {
+            state.isDragging = true;
+            if (!isTouchDevice()) canvas.style.cursor = CURSOR_GRABBING;
+          }
+          if (state.isDragging) {
+            state.transform.x = state.dragStartTransform.x + dx;
+            state.transform.y = state.dragStartTransform.y + dy;
+          }
+        }
+      });
+
+      canvas.addEventListener('pointerleave', (e) => {
+        _activePointers.delete(e.pointerId);
+        state.dragStartPointer = null;
+        if (!isTouchDevice()) {
+          state.mouseX = -9999;
+          state.mouseY = -9999;
+          state.mouseDirty = true;
+          state.hoveredNode = null;
+          drawHoverTooltip();
+        }
+      });
+
+      window.addEventListener('pointerup', (e) => {
+        const wasDragging = state.isDragging;
+        _activePointers.delete(e.pointerId);
+        state.dragStartPointer = null;
+
+        if (state.isDragging) {
+          state.isDragging = false;
+          if (!isTouchDevice()) canvas.style.cursor = state.hoveredNode ? 'pointer' : CURSOR_GRAB;
+        }
+
+        // Tap on touch or click on desktop: select nearest node
+        if (!wasDragging) {
+          const rect = canvas.getBoundingClientRect();
+          const tx = (e.clientX - rect.left - state.transform.x) / state.transform.k;
+          const ty = (e.clientY - rect.top - state.transform.y) / state.transform.k;
+          let best = null, bestD = 20 / state.transform.k;
+          for (const p of particles) {
+            const d = Math.hypot(p.dispX - tx, p.dispY - ty);
+            if (d < bestD) { bestD = d; best = p; }
+          }
+          if (best) lockSelectedNode(best);
+        }
+      });
+
+      // 2. Mouse Wheel Scroll Zoom (desktop)
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+
+        const zoomIntensity = 0.05;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const wheelX = (mouseX - state.transform.x) / state.transform.k;
+        const wheelY = (mouseY - state.transform.y) / state.transform.k;
+
+        const delta = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
+        state.transform.k = Math.max(0.2, Math.min(6, state.transform.k * delta));
+
+        state.transform.x = mouseX - wheelX * state.transform.k;
+        state.transform.y = mouseY - wheelY * state.transform.k;
+      }, { passive: false });
+    }
+
+    // =========================================================================
+    // Timeline Controllers & Play Actions
+    // =========================================================================
+    
+    const scrubberEl = document.getElementById('timelineScrubber');
+    const yearDisplayEl = document.getElementById('timelineYearDisplay');
+    const playBtnEl = document.getElementById('btnTimelinePlay');
+
+    function setYear(y, source) {
+      state.year = Math.max(YEAR_MIN, Math.min(YEAR_MAX, y));
+      
+      // Hand-rolled counter animation (replaces GSAP)
+      const fromVal = parseInt(yearDisplayEl.textContent, 10) || state.year;
+      const toVal   = state.year;
+      if (fromVal !== toVal) {
+        const start = performance.now();
+        (function tick(now) {
+          const t = Math.min(1, (now - start) / 350);
+          yearDisplayEl.textContent = Math.round(fromVal + (toVal - fromVal) * t);
+          if (t < 1) requestAnimationFrame(tick);
+        })(performance.now());
+      }
+
+      if (source !== 'scrub') {
+        scrubberEl.value = state.year;
+      }
+      
+      filterAndProcessData();
+    }
+
+    scrubberEl.addEventListener('input', () => {
+      setYear(parseInt(scrubberEl.value, 10), 'scrub');
+    });
+
+    playBtnEl.addEventListener('click', () => {
+      state.playing = !state.playing;
+      playBtnEl.textContent = state.playing ? '◼' : '▶';
+      playTimer = 0;
+    });
+
+
+
+    // All Years Mode Toggle
+    const allYearsBtn = document.getElementById('btnToggleAllYears');
+    allYearsBtn.addEventListener('click', () => {
+      state.allYears = !state.allYears;
+      allYearsBtn.classList.toggle('active', state.allYears);
+      
+      // Toggle play buttons / scrubber interactivity
+      scrubberEl.disabled = state.allYears;
+      playBtnEl.disabled = state.allYears;
+      
+      filterAndProcessData();
+    });
+
+    // =========================================================================
+    // D3 Timeline incident frequency count mini chart
+    // =========================================================================
+    
+    function drawMiniCountChart() {
+      const cw = miniChartCanvas.clientWidth;
+      const ch = miniChartCanvas.clientHeight;
+      
+      miniChartCanvas.width = cw * DPR;
+      miniChartCanvas.height = ch * DPR;
+      miniChartCanvas.style.width = `${cw}px`;
+      miniChartCanvas.style.height = `${ch}px`;
+      
+      miniChartCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      miniChartCtx.clearRect(0, 0, cw, ch);
+
+      // Compute incident counts per year
+      const yearsList = [];
+      for (let y = YEAR_MIN; y <= YEAR_MAX; y++) {
+        yearsList.push(y);
+      }
+
+      const yearlyCounts = {};
+      yearsList.forEach(y => yearlyCounts[y] = 0);
+      state.rawIncidents.forEach(inc => {
+        if (yearlyCounts[inc.year] !== undefined) {
+          yearlyCounts[inc.year]++;
+        }
+      });
+
+      const maxVal = Math.max(...Object.values(yearlyCounts)) || 1;
+      const padLeft = 10;
+      const padRight = 10;
+      const barW = (cw - padLeft - padRight) / yearsList.length;
+
+      // Draw bars
+      yearsList.forEach((y, idx) => {
+        const count = yearlyCounts[y];
+        const valH = (count / maxVal) * (ch - 8);
+        const bx = padLeft + idx * barW + (barW * 0.15);
+        const bw = barW * 0.7;
+        const by = ch - valH - 2;
+
+        const isActiveYear = state.allYears || y <= state.year;
+        
+        miniChartCtx.fillStyle = isActiveYear ? 'var(--ink)' : 'var(--gray-border-dark)';
+        miniChartCtx.globalAlpha = isActiveYear ? 0.85 : 0.35;
+
+        // Draw pill-shaped bar
+        miniChartCtx.beginPath();
+        miniChartCtx.fillRect(bx, by, bw, valH);
+      });
+      miniChartCtx.globalAlpha = 1;
+    }
+
+    // =========================================================================
+    // View Toggles, Coloring Modes & Canvas resizing
+    // =========================================================================
+    
+    // Morph Layout View Select
+    const viewSelect = document.getElementById('viewSelect');
+    if (viewSelect) {
+      viewSelect.value = state.view;
+      viewSelect.addEventListener('change', (e) => {
+        const viewName = e.target.value;
+        if (state.view === viewName) return;
+        state.view = viewName;
+        resetViewport();
+      });
+    }
+
+    // Color Mode Select
+    const colorSelect = document.getElementById('colorSelect');
+    if (colorSelect) {
+      colorSelect.value = state.colorMode;
+      colorSelect.addEventListener('change', (e) => {
+        state.colorMode = e.target.value;
+      });
+    }
+
+
+
+    // Handle high DPI display resizing
+    function resizeCanvas() {
+      const wrap = document.getElementById('canvas-wrap');
+      const r = wrap.getBoundingClientRect();
+
+      canvas.width = Math.floor(r.width * DPR);
+      canvas.height = Math.floor(r.height * DPR);
+      canvas.style.width = `${r.width}px`;
+      canvas.style.height = `${r.height}px`;
+
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+      // Re-layout and run physics precomputes
+      filterAndProcessData();
+      drawMiniCountChart();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // =========================================================================
+    // Keyboard Shortcuts (Space, R, F, Escape)
+    // =========================================================================
+    
+    window.addEventListener('keydown', (e) => {
+      const tag = e.target.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return; // ignore on text entry
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        playBtnEl.click();
+      } else if (e.code === 'KeyR') {
+        resetViewport();
+        showToast('Observatory viewport reset');
+      } else if (e.code === 'Escape') {
+        lockSelectedNode(null);
+      } else if (e.code === 'KeyF') {
+        e.preventDefault();
+        toggleFullScreen();
+      }
+    });
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.error(`Fullscreen failed: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // =========================================================================
+    // Application Bootstrap Load
+    // =========================================================================
+    
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+
+    function cleanDescription(s) {
+      if (!s) return '';
+      return String(s)
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function extractUrl(s) {
+      if (!s) return null;
+      const hrefMatch = String(s).match(/href=["']([^"']+)["']/i);
+      if (hrefMatch) return hrefMatch[1];
+      const urlMatch = String(s).match(/https?:\/\/[^\s"'<>]+/);
+      return urlMatch ? urlMatch[0] : null;
+    }
+
+    function resolveSourceUrl(inc) {
+      return inc.source_url || extractUrl(inc.description) || null;
+    }
+
+    // =========================================================================
+    // Loading Screen
+    // =========================================================================
+
+    const LOADING_MESSAGES = [
+      'Collecting incident reports...',
+      'Scanning AI failure databases...',
+      'Cross-referencing bias incidents...',
+      'Mapping global AI harms...',
+      'Indexing misinformation events...',
+      'Parsing hallucination reports...',
+      'Aggregating privacy breaches...',
+      'Clustering algorithmic failures...',
+      'Loading observatory data...',
+      'Calibrating severity scores...',
+      'Querying incident registry...',
+      'Fetching agentic failure logs...',
+      'Connecting to AIID database...',
+      'Synchronizing AIAAIC repository...',
+      'Building incident constellation...',
+      'Triangulating risk coordinates...',
+      'Warming up the particle engine...',
+      'Almost ready...',
+    ];
+
+    let _loadingMsgInterval = null;
+    let _loadingMsgIdx = 0;
+    let _loadingStartedAt = 0;
+    const LOADING_MIN_MS = 1800; // always show for at least 1.8s so messages are readable
+
+    function startLoadingScreen() {
+      _loadingStartedAt = Date.now();
+      const msgEl = document.getElementById('loadingMsg');
+      const barEl = document.getElementById('loadingBar');
+      if (!msgEl) return;
+
+      msgEl.textContent = LOADING_MESSAGES[0];
+      barEl.style.width = '8%';
+
+      let progress = 8;
+      _loadingMsgIdx = 0;
+
+      _loadingMsgInterval = setInterval(() => {
+        _loadingMsgIdx = (_loadingMsgIdx + 1) % LOADING_MESSAGES.length;
+        msgEl.style.opacity = '0';
+        setTimeout(() => {
+          msgEl.textContent = LOADING_MESSAGES[_loadingMsgIdx];
+          msgEl.style.opacity = '1';
+        }, 150);
+
+        // Ease the bar toward 90% — snaps to 100% only when data arrives
+        progress = Math.min(90, progress + Math.random() * 12);
+        barEl.style.width = progress + '%';
+      }, 900);
+    }
+
+    function hideLoadingScreen() {
+      const elapsed = Date.now() - _loadingStartedAt;
+      const remaining = Math.max(0, LOADING_MIN_MS - elapsed);
+
+      setTimeout(() => {
+        clearInterval(_loadingMsgInterval);
+        const screen = document.getElementById('loading-screen');
+        const barEl  = document.getElementById('loadingBar');
+        const msgEl  = document.getElementById('loadingMsg');
+        if (!screen) return;
+        if (msgEl) msgEl.textContent = 'Observatory ready.';
+        if (barEl) barEl.style.width = '100%';
+        setTimeout(() => screen.classList.add('hidden'), 400);
+      }, remaining);
+    }
+
+    async function init() {
+      // Clear old caches programmatically from client side to ensure freshness
+      if (window.caches) {
+        try {
+          const keys = await caches.keys();
+          for (const key of keys) {
+            if (!key.includes('aiobs-v4')) {
+              await caches.delete(key);
+              console.log('Purged stale cache:', key);
+            }
+          }
+        } catch (e) {
+          console.warn('Cache clearing failed:', e);
+        }
+      }
+
+      // Register service worker with cache-busting query parameter and force updates
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          reg.update();
+        }).catch(e => console.warn('SW registration failed:', e));
+      }
+
+      startLoadingScreen();
+      setupDrawers();
+      setupViewportControls();
+
+      // Set canvas dimensions immediately — must happen before buildParticles() produces valid coords
+      resizeCanvas();
+
+      // Start render loop immediately — canvas is sized, particles[] is empty but loop runs fine
+      requestAnimationFrame(render);
+
+      // Fire world map fetch in background — NOT in the critical path for first dots
+      loadWorldMap();
+
+      // Only await data — dots appear as soon as page 1 arrives (~300–500 ms)
+      await loadData();
+      setYear(2026);
+    }
+
+    // Called once both async CDN scripts and this inline script are parsed
+    function _initApp() { init(); }
+    // Handle the case where CDN scripts already fired before parser reached here
+    if (_libsReady === 2) _initApp();
+
+    // Trigger loading
+    // init() is now triggered by _initApp() above, not called directly
+  </script>
+
+</body>
+</html>

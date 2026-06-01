@@ -1,0 +1,36 @@
+{
+  "name": "ai-incident-observatory",
+  "version": "1.0.0",
+  "description": "Full-stack AI & ML Incident Observatory with a clean 2D Canvas visualization.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "seed": "node server/seed.js",
+    "dev": "nodemon server/index.js"
+  },
+  "keywords": [
+    "ai",
+    "ml",
+    "incidents",
+    "observatory",
+    "canvas",
+    "2d"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.5.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "node-cron": "^3.0.3",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

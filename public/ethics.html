@@ -1,0 +1,3053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Ethical Mindalike — AI Incident Observatory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css?v=4">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --ethics-gpt:   #10a37f;
+      --ethics-claude:#d97706;
+      --ethics-gemini:#4285f4;
+      --ethics-deep:  #ef4444;
+      --ethics-grok:  #6366f1;
+    }
+
+    body { background: var(--bg); overflow-y: auto; overflow-x: hidden; }
+
+
+
+    /* ── Views ───────────────────────────────── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Intro View ───────────────────────────── */
+    .intro-wrap {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 100px 24px 48px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .intro-title-glow {
+      position: absolute;
+      top: 30%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 480px; height: 180px;
+      background: radial-gradient(circle, rgba(150, 85, 200, 0.08) 0%, rgba(63, 123, 191, 0.05) 50%, rgba(30, 169, 133, 0.03) 70%, transparent 100%);
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .intro-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 28px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+    .intro-wrap h1 {
+      font-size: clamp(28px, 5vw, 48px); font-weight: 700;
+      letter-spacing: -1.5px; color: var(--ink);
+      margin-bottom: 16px; line-height: 1.1;
+    }
+    .intro-wrap h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #3f7bbf, #9655c8, #d65a4a, #1ea985, #d68827, #85a82a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .intro-wrap p {
+      font-size: 16px; color: var(--gray-text); max-width: 520px;
+      line-height: 1.7; margin-bottom: 40px;
+    }
+    .intro-meta {
+      display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .intro-meta-item { text-align: center; }
+    .intro-meta-item strong { display: block; font-size: 22px; font-weight: 700; color: var(--ink); }
+    .intro-meta-item span { font-size: 12px; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-start {
+      padding: 16px 48px; border-radius: 50px;
+      background: #3f7bbf;
+      color: #fff; font-size: 15px; font-weight: 600;
+      border: none; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(63, 123, 191, 0.25);
+      transition: all 0.15s ease;
+    }
+    .btn-start:hover { transform: translateY(-2px); background: #3367a3; box-shadow: 0 12px 32px rgba(63, 123, 191, 0.35); }
+
+    .btn-view-charts {
+      padding: 16px 48px; border-radius: 50px;
+      background: #d68827;
+      color: #fff; font-size: 15px; font-weight: 600;
+      border: none; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(214, 136, 39, 0.25);
+      transition: all 0.15s ease;
+    }
+    .btn-view-charts:hover { transform: translateY(-2px); background: #b8711e; box-shadow: 0 12px 32px rgba(214, 136, 39, 0.35); }
+
+    /* ── Quiz View ────────────────────────────── */
+    .quiz-wrap {
+      max-width: 680px; margin: 0 auto;
+      padding: 100px 24px 80px;
+    }
+    .quiz-progress-bar-outer {
+      width: 100%; height: 4px; background: var(--gray-border);
+      border-radius: 2px; margin-bottom: 40px; overflow: hidden;
+    }
+    .quiz-progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, #3f7bbf, #9655c8, #d65a4a, #1ea985, #d68827, #85a82a);
+      background-size: 680px 100%;
+      border-radius: 2px; transition: width 0.4s ease;
+    }
+    .quiz-step-label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--gray-text); margin-bottom: 8px;
+    }
+    .quiz-category-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      background: var(--gray-bg); border: 1px solid var(--gray-border);
+      font-size: 11px; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+    .quiz-question-text {
+      font-size: clamp(18px, 3vw, 24px); font-weight: 600; color: var(--ink);
+      line-height: 1.4; margin-bottom: 36px;
+    }
+
+    /* Scale buttons */
+    .scale-group {
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+      margin-bottom: 48px;
+    }
+    .scale-btn {
+      flex: 1; min-width: 52px; max-width: 80px;
+      padding: 18px 8px;
+      border: 2px solid var(--gray-border); border-radius: 14px;
+      background: var(--bg); cursor: pointer; transition: all 0.15s;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      color: var(--gray-text);
+    }
+    .scale-btn .num { font-size: 20px; font-weight: 700; color: var(--ink); transition: color 0.15s ease; }
+    .scale-btn .lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; line-height: 1.3; }
+
+    /* Scale specific premium hover and selected colors */
+    .scale-btn[data-val="1"]:hover { border-color: #d65a4a; transform: translateY(-2px); }
+    .scale-btn[data-val="1"].selected { border-color: #d65a4a; background: rgba(214, 90, 74, 0.08); color: #d65a4a; }
+    .scale-btn[data-val="1"].selected .num { color: #d65a4a; }
+
+    .scale-btn[data-val="2"]:hover { border-color: #d68827; transform: translateY(-2px); }
+    .scale-btn[data-val="2"].selected { border-color: #d68827; background: rgba(214, 136, 39, 0.08); color: #d68827; }
+    .scale-btn[data-val="2"].selected .num { color: #d68827; }
+
+    .scale-btn[data-val="3"]:hover { border-color: #9655c8; transform: translateY(-2px); }
+    .scale-btn[data-val="3"].selected { border-color: #9655c8; background: rgba(150, 85, 200, 0.08); color: #9655c8; }
+    .scale-btn[data-val="3"].selected .num { color: #9655c8; }
+
+    .scale-btn[data-val="4"]:hover { border-color: #3f7bbf; transform: translateY(-2px); }
+    .scale-btn[data-val="4"].selected { border-color: #3f7bbf; background: rgba(63, 123, 191, 0.08); color: #3f7bbf; }
+    .scale-btn[data-val="4"].selected .num { color: #3f7bbf; }
+
+    .scale-btn[data-val="5"]:hover { border-color: #1ea985; transform: translateY(-2px); }
+    .scale-btn[data-val="5"].selected { border-color: #1ea985; background: rgba(30, 169, 133, 0.08); color: #1ea985; }
+    .scale-btn[data-val="5"].selected .num { color: #1ea985; }
+
+    /* Choice buttons (binary / mc) */
+    .choice-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
+    .choice-btn {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 18px 20px; border-radius: 14px;
+      border: 2px solid var(--gray-border); background: var(--bg);
+      cursor: pointer; transition: all 0.15s; text-align: left;
+    }
+    .choice-btn .choice-letter {
+      flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+      background: var(--gray-bg); border: 1px solid var(--gray-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: var(--gray-text);
+      transition: all 0.15s;
+    }
+    .choice-btn .choice-text { font-size: 14px; color: var(--ink); line-height: 1.5; padding-top: 3px; }
+
+    /* Choice specific premium hover and selected colors */
+    .choice-btn[data-val="1"]:hover { border-color: #3f7bbf; transform: translateX(3px); }
+    .choice-btn[data-val="1"].selected { border-color: #3f7bbf; background: rgba(63, 123, 191, 0.08); }
+    .choice-btn[data-val="1"].selected .choice-letter { background: #3f7bbf; border-color: #3f7bbf; color: #fff; }
+
+    .choice-btn[data-val="2"]:hover { border-color: #9655c8; transform: translateX(3px); }
+    .choice-btn[data-val="2"].selected { border-color: #9655c8; background: rgba(150, 85, 200, 0.08); }
+    .choice-btn[data-val="2"].selected .choice-letter { background: #9655c8; border-color: #9655c8; color: #fff; }
+
+    .choice-btn[data-val="3"]:hover { border-color: #d68827; transform: translateX(3px); }
+    .choice-btn[data-val="3"].selected { border-color: #d68827; background: rgba(214, 136, 39, 0.08); }
+    .choice-btn[data-val="3"].selected .choice-letter { background: #d68827; border-color: #d68827; color: #fff; }
+
+    .choice-btn[data-val="4"]:hover { border-color: #1ea985; transform: translateX(3px); }
+    .choice-btn[data-val="4"].selected { border-color: #1ea985; background: rgba(30, 169, 133, 0.08); }
+    .choice-btn[data-val="4"].selected .choice-letter { background: #1ea985; border-color: #1ea985; color: #fff; }
+
+    /* Nav buttons */
+    .quiz-nav { display: flex; justify-content: space-between; align-items: center; }
+    .btn-quiz-nav {
+      padding: 10px 24px; border-radius: 50px; border: 2px solid var(--gray-border);
+      background: var(--bg); color: var(--ink); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-quiz-nav:hover { border-color: var(--ink); }
+    .btn-quiz-nav:disabled { opacity: 0.3; pointer-events: none; }
+    .btn-quiz-next {
+      padding: 12px 32px; border-radius: 50px;
+      background: var(--ink); color: #fff; font-size: 13px; font-weight: 600;
+      border: none; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-quiz-next:hover { background: #333; transform: translateY(-1px); }
+    .btn-quiz-next:disabled { opacity: 0.3; pointer-events: none; }
+    .btn-submit-quiz {
+      padding: 14px 40px; border-radius: 50px;
+      background: #9655c8;
+      color: #fff; font-size: 14px; font-weight: 600;
+      border: none; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(150, 85, 200, 0.25);
+      transition: all 0.15s ease;
+    }
+    .btn-submit-quiz:hover { transform: translateY(-2px); background: #7e42ab; box-shadow: 0 12px 32px rgba(150, 85, 200, 0.35); }
+    .btn-submit-quiz:disabled { opacity: 0.4; pointer-events: none; }
+
+    /* ── Results View ─────────────────────────── */
+    .results-wrap {
+      max-width: 960px; margin: 0 auto;
+      padding: 100px 24px 80px;
+    }
+    .results-wrap h2 {
+      font-size: 14px; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--gray-text); margin-bottom: 32px; text-align: center;
+    }
+
+    /* Soulmate card */
+    .soulmate-card {
+      border-radius: 20px; padding: 40px; margin-bottom: 48px;
+      display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+      border: 1px solid var(--gray-border);
+      background: var(--gray-bg);
+      box-shadow: var(--shadow);
+    }
+    .soulmate-avatar {
+      width: 88px; height: 88px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 800; color: #fff;
+    }
+    .soulmate-info { flex: 1; min-width: 200px; }
+    .soulmate-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-text); margin-bottom: 6px; }
+    .soulmate-name { font-size: 30px; font-weight: 800; letter-spacing: -1px; color: var(--ink); margin-bottom: 4px; }
+    .soulmate-version { font-size: 13px; color: var(--gray-text); margin-bottom: 12px; }
+    .soulmate-desc { font-size: 13px; color: var(--ink-dim); line-height: 1.6; max-width: 420px; }
+    .soulmate-score {
+      text-align: center; flex-shrink: 0;
+    }
+    .soulmate-score-num {
+      font-size: 56px; font-weight: 800; letter-spacing: -2px;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .soulmate-score-label { font-size: 11px; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* All scores mini row */
+    .all-scores-row {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 48px;
+    }
+    .score-chip {
+      flex: 1; min-width: 150px; padding: 14px 16px; border-radius: 14px;
+      background: var(--gray-bg); border: 1px solid var(--gray-border);
+      display: flex; flex-direction: column; gap: 6px;
+      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+    .score-chip:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: var(--shadow-hover);
+    }
+    .score-chip-name { font-size: 12px; font-weight: 600; color: var(--ink); }
+    .score-chip-bar-outer { height: 4px; background: var(--gray-border); border-radius: 2px; }
+    .score-chip-bar-inner { height: 100%; border-radius: 2px; }
+    .score-chip-pct { font-size: 11px; color: var(--gray-text); }
+
+    /* Segmented Tabs Control */
+    .results-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      background: var(--gray-bg);
+      border: 1px solid var(--gray-border);
+      border-radius: 30px;
+      padding: 4px;
+      max-width: 480px;
+      margin: 0 auto 36px;
+    }
+    .results-tab {
+      flex: 1;
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      color: var(--gray-text);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 26px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .results-tab:hover {
+      color: var(--ink);
+    }
+    .results-tab.active {
+      background: var(--bg);
+      color: var(--ink);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    .results-section {
+      display: block;
+    }
+    .results-section.hidden {
+      display: none !important;
+    }
+
+    /* Show More Scores */
+    .btn-show-more {
+      padding: 10px 24px; border-radius: 50px; border: 1px solid var(--gray-border-dark);
+      background: var(--bg); color: var(--ink); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-show-more:hover { border-color: var(--ink); background: var(--gray-bg); }
+    .btn-show-more svg { transition: transform 0.25s ease; }
+    .btn-show-more.expanded svg { transform: rotate(180deg); }
+
+    /* Full-width col-3 chart-card layout */
+    .chart-card.col-3 { grid-column: span 3; }
+    @media (max-width: 800px) { .chart-card.col-3 { grid-column: span 1; } }
+
+    /* Charts grid */
+    .charts-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 48px;
+    }
+    @media (max-width: 800px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--bg); border: 1px solid var(--gray-border);
+      border-radius: 20px; padding: 28px;
+    }
+    .chart-card.col-2 { grid-column: span 2; }
+    @media (max-width: 800px) { .chart-card.col-2 { grid-column: span 1; } }
+    .chart-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-text); margin-bottom: 20px; }
+    .chart-canvas-wrap { position: relative; height: 260px; }
+
+    /* Leaderboard */
+    .leaderboard { list-style: none; padding: 0; margin: 0; }
+    .leaderboard-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 0; border-bottom: 1px solid var(--gray-border);
+    }
+    .leaderboard-item:last-child { border-bottom: none; }
+    .lb-rank { font-size: 18px; font-weight: 800; color: var(--gray-border-dark); width: 28px; text-align: center; flex-shrink: 0; }
+    .lb-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .lb-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--ink); }
+    .lb-version { font-size: 11px; color: var(--gray-text); }
+    .lb-score { font-size: 14px; font-weight: 700; color: var(--ink); }
+    .lb-bar-outer { flex: 2; height: 6px; background: var(--gray-border); border-radius: 3px; overflow: hidden; }
+    .lb-bar-inner { height: 100%; border-radius: 3px; }
+
+    /* Retake */
+    .retake-row { text-align: center; padding: 16px 0; }
+    .btn-retake {
+      padding: 12px 36px; border-radius: 50px;
+      background: #85a82a;
+      color: #fff; font-size: 13px; font-weight: 600;
+      border: none; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(133, 168, 42, 0.2);
+      transition: all 0.15s ease;
+    }
+    .btn-retake:hover {
+      background: #6e8c20;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(133, 168, 42, 0.3);
+    }
+
+    /* Loading spinner */
+    .eth-loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 400ms ease;
+    }
+    .empty-questions {
+      text-align: center; padding: 80px 24px; color: var(--gray-text);
+    }
+    .empty-questions strong { display: block; font-size: 16px; color: var(--ink); margin-bottom: 8px; }
+
+    /* ── Compass Explorer ──────────────────────── */
+    .compass-explorer-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 64px 24px 80px 24px;
+      border-top: 1px solid var(--gray-border);
+      text-align: left;
+    }
+    .compass-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .compass-header h2 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    .compass-header p {
+      font-size: 14px;
+      color: var(--gray-text);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .compass-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 991px) {
+      .compass-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .compass-card {
+      background: var(--bg);
+      border: 1px solid var(--gray-border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+    .compass-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--gray-text);
+      margin-bottom: 20px;
+    }
+    .compass-canvas-wrap {
+      position: relative;
+      height: 480px;
+      width: 100%;
+    }
+    .comparison-card {
+      background: var(--bg);
+      border: 1px solid var(--gray-border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    .comparison-selectors {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 480px) {
+      .comparison-selectors {
+        flex-direction: column;
+      }
+    }
+    .comparison-select-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .comparison-select-wrap label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--gray-text);
+    }
+    .comparison-select {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--gray-border);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .comparison-select:focus {
+      border-color: #f97316;
+    }
+    .comparison-output {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .comparison-empty {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--gray-text);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .comparison-empty-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+    .disagreement-item {
+      border: 1px solid var(--gray-border);
+      border-radius: 12px;
+      padding: 16px;
+      background: var(--gray-bg);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .disagreement-item:last-child {
+      margin-bottom: 0;
+    }
+    .disagreement-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--gray-text);
+    }
+    .disagreement-category {
+      background: var(--bg);
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--gray-border);
+    }
+    .disagreement-score-badge {
+      color: #e74c3c;
+    }
+    .disagreement-qtext {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+    .disagreement-answers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    @media (max-width: 480px) {
+      .disagreement-answers {
+        grid-template-columns: 1fr;
+      }
+    }
+    .disagreement-ans-box {
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-left: 4px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .disagreement-model-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--gray-text);
+    }
+    .disagreement-model-val {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    /* ── Comparison Modal ──────────────────────── */
+    .comp-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .comp-modal-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(17, 17, 17, 0.6);
+      backdrop-filter: blur(8px);
+    }
+    .comp-modal-content {
+      position: relative;
+      background: var(--bg);
+      border: 1px solid var(--gray-border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 720px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+      z-index: 1001;
+    }
+    @keyframes modalSlideIn {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .comp-modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--gray-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .comp-modal-header h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0;
+    }
+    .comp-modal-header p {
+      font-size: 12px;
+      color: var(--gray-text);
+      margin: 4px 0 0 0;
+    }
+    .comp-modal-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: var(--gray-text);
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .comp-modal-close:hover {
+      color: var(--ink);
+    }
+    .comp-modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-q-item {
+      border: 1px solid var(--gray-border);
+      border-radius: 16px;
+      padding: 20px;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-q-item.agreement {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+    .modal-q-item.disagreement {
+      border-color: var(--gray-border);
+      background: var(--gray-bg);
+    }
+    .modal-q-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--gray-text);
+    }
+    .modal-q-status {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 700;
+    }
+    .modal-q-status.agree {
+      color: #166534;
+    }
+    .modal-q-status.disagree {
+      color: #b91c1c;
+    }
+    .modal-q-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .modal-q-answers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 480px) {
+      .modal-q-answers {
+        grid-template-columns: 1fr;
+      }
+    }
+    .modal-ans-box {
+      border-radius: 10px;
+      padding: 12px;
+      background: var(--bg);
+      border: 1px solid var(--gray-border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .modal-ans-box.user {
+      border-left: 4px solid #f97316;
+    }
+    .modal-ans-box.ai {
+      border-left: 4px solid #ccc;
+    }
+    .modal-ans-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--gray-text);
+    }
+    .modal-ans-val {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    /* ── DNA Fingerprint ───────────────────────── */
+    .dna-card {
+      background: #ffffff;
+      border: 1px solid var(--gray-border);
+      border-radius: 20px;
+      padding: 40px 36px 36px;
+      margin-bottom: 24px;
+      color: var(--ink);
+      position: relative;
+    }
+    .dna-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 20% 30%, rgba(0,113,227,0.04), transparent 50%),
+                  radial-gradient(circle at 80% 70%, rgba(0,113,227,0.02), transparent 50%);
+      pointer-events: none;
+    }
+    .dna-card .chart-title { color: var(--gray-text); margin-bottom: 6px; position: relative; }
+    .dna-card .dna-sub { font-size: 12px; color: var(--gray-text); margin-bottom: 28px; position: relative; }
+    .dna-strip-wrap { position: relative; width: 100%; padding-top: 8px; }
+    .dna-strip-svg { width: 100%; height: 220px; display: block; cursor: crosshair; overflow: visible; }
+    .dna-legend {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      margin-top: 20px; font-size: 10px; color: var(--gray-text);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      position: relative;
+    }
+    .dna-legend-item { display: flex; align-items: center; gap: 6px; }
+    .dna-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+    .dna-tooltip {
+      position: absolute; pointer-events: none;
+      background: rgba(0,0,0,0.92); color: #fff;
+      padding: 10px 12px; border-radius: 10px;
+      font-size: 12px; line-height: 1.45;
+      max-width: 280px; z-index: 50;
+      box-shadow: 0 10px 32px rgba(0,0,0,0.5);
+      transform: translate(-50%, calc(-100% - 12px));
+      opacity: 0; transition: opacity 0.15s;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .dna-tooltip.visible { opacity: 1; }
+    .dna-tooltip-q { font-weight: 600; margin-bottom: 6px; color: #fff; }
+    .dna-tooltip-meta { color: rgba(255,255,255,0.6); font-size: 11px; }
+    .dna-tooltip-meta strong { color: var(--accent); }
+
+    /* ── Unique Answers ────────────────────────── */
+    .unique-card {
+      background: var(--bg);
+      border: 1px solid var(--gray-border);
+      border-radius: 20px;
+      padding: 28px;
+      position: relative;
+    }
+    .unique-sub { font-size: 12px; color: var(--gray-text); margin: 6px 0 18px; }
+    .unique-list { display: flex; flex-direction: column; gap: 12px; }
+    .unique-row {
+      padding: 14px 16px;
+      background: var(--gray-bg);
+      border-radius: 12px;
+      border-left: 3px solid var(--accent);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .unique-row:hover { transform: translateX(2px); box-shadow: 0 4px 14px rgba(0,0,0,0.05); }
+    .unique-row-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+    .unique-cat { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-text); font-weight: 600; }
+    .unique-rare {
+      font-size: 11px; font-weight: 700; color: var(--accent);
+      background: rgba(0,113,227,0.08); padding: 3px 8px; border-radius: 10px;
+      white-space: nowrap;
+    }
+    .unique-q { font-size: 13px; color: var(--ink); margin: 6px 0 8px; line-height: 1.4; font-weight: 500; }
+    .unique-ans {
+      font-size: 12px; color: var(--gray-text);
+    }
+    .unique-ans strong { color: var(--ink); font-weight: 600; }
+    .unique-empty { font-size: 13px; color: var(--gray-text); padding: 20px; text-align: center; }
+
+    /* ── Percentile chips ──────────────────────── */
+    .percentile-card { background: var(--bg); border: 1px solid var(--gray-border); border-radius: 20px; padding: 28px; }
+    .pct-list { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+    .pct-row { display: flex; flex-direction: column; gap: 6px; }
+    .pct-label { font-size: 12px; color: var(--ink); font-weight: 600; line-height: 1.4; }
+    .pct-label em { font-style: normal; color: var(--accent); }
+    .pct-bar-outer { height: 8px; background: var(--gray-bg); border-radius: 4px; overflow: hidden; position: relative; }
+    .pct-bar-inner {
+      height: 100%; border-radius: 4px;
+      background: var(--accent);
+      transition: width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .pct-num { font-size: 11px; color: var(--gray-text); font-weight: 600; }
+
+    /* ── Share card / button ───────────────────── */
+    .share-row {
+      display: flex; justify-content: center; gap: 12px;
+      margin: 32px 0 12px;
+    }
+    .btn-share {
+      padding: 12px 28px; border-radius: 50px;
+      color: #fff;
+      font-size: 13px; font-weight: 600;
+      border: none; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: all 0.15s ease;
+    }
+    #btnDownloadCard {
+      background: #d65a4a;
+      box-shadow: 0 6px 20px rgba(214, 90, 74, 0.2);
+    }
+    #btnDownloadCard:hover {
+      background: #ba4738;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(214, 90, 74, 0.3);
+    }
+    #btnCopyShare {
+      background: #1ea985;
+      box-shadow: 0 6px 20px rgba(30, 169, 133, 0.2);
+    }
+    #btnCopyShare:hover {
+      background: #178a6c;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(30, 169, 133, 0.3);
+    }
+    .btn-share.copied { background: #16a34a !important; box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3) !important; }
+
+    #btnViewSavedResults {
+      background: #5c67d2;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(92, 103, 210, 0.25);
+    }
+    #btnViewSavedResults:hover {
+      background: #4952b1;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(92, 103, 210, 0.35);
+    }
+
+    /* Compass user marker pulse */
+    @keyframes compass-pulse-anim {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,113,227,0.5); }
+      50% { box-shadow: 0 0 0 12px rgba(0,113,227,0); }
+    }
+    
+    /* Active Navbar Clicks Override */
+    .nav-btn.active, .mobile-bar-item.mobile-bar-active {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background grid pattern -->
+  <div class="grid-overlay"></div>
+
+  <!-- Header Branding and Navigation Controls -->
+  <header>
+    <div class="brand">
+      <h1>AI Incident Observatory</h1>
+      <span class="sub">AI Mindalike</span>
+    </div>
+    
+    <!-- Spacer to keep navigation controls on the right in 3-column grid -->
+    <div class="center-spacer"></div>
+
+    <div class="navigation-controls">
+      <a href="index.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
+        <span>Observatory</span>
+      </a>
+
+      <a href="analytics.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
+        <span>Analytics</span>
+      </a>
+
+      <a href="ethics.html" class="nav-btn nav-desktop-only active" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
+        <span>AI Mindalike</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Loading Screen overlay -->
+  <div class="eth-loading" id="viewLoading">
+    <div class="loading-inner">
+      <div class="loading-logo">
+        <span class="loading-logo-dot" style="--c:#3f7bbf"></span>
+        <span class="loading-logo-dot" style="--c:#9655c8"></span>
+        <span class="loading-logo-dot" style="--c:#d65a4a"></span>
+        <span class="loading-logo-dot" style="--c:#1ea985"></span>
+        <span class="loading-logo-dot" style="--c:#d68827"></span>
+        <span class="loading-logo-dot" style="--c:#85a82a"></span>
+      </div>
+      <div class="loading-title">AI Incident Observatory</div>
+      <div class="loading-msg">Calculating ethical compass telemetry...</div>
+      <div class="loading-bar-track"><div class="loading-bar-fill" style="width: 100%;"></div></div>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="view" id="viewIntro">
+    <div class="intro-wrap">
+      <div class="intro-title-glow"></div>
+      <div class="intro-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </svg>
+      </div>
+      <h1>Find Your <em>Ethical AI Mindalike</em></h1>
+      <p>20 random ethical dilemmas per round — trolley problems, AI consciousness, dark trade-offs. We'll reveal which AI thinks most like you. New questions every round.</p>
+      <div class="intro-meta">
+        <div class="intro-meta-item">
+          <strong>20</strong>
+          <span>Per Round</span>
+        </div>
+        <div class="intro-meta-item">
+          <strong id="introAICount">5</strong>
+          <span>AI Models</span>
+        </div>
+        <div class="intro-meta-item">
+          <strong id="introUserCount">—</strong>
+          <span>Humans took this</span>
+        </div>
+        <div class="intro-meta-item">
+          <strong id="introExplored">0/100</strong>
+          <span>You've Explored</span>
+        </div>
+      </div>
+      <div id="introProgressWrap" style="width:100%;max-width:400px;margin-bottom:24px;display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;color:var(--gray-text);text-transform:uppercase;letter-spacing:0.5px">Your progress</span>
+          <button id="btnResetProgress" style="font-size:11px;color:var(--gray-text);background:none;border:none;cursor:pointer;text-decoration:underline;padding:0">Reset</button>
+        </div>
+        <div style="height:6px;background:var(--gray-border);border-radius:3px;overflow:hidden">
+          <div id="introProgressBar" style="height:100%;background:var(--accent);border-radius:3px;transition:width 0.4s ease;width:0%"></div>
+        </div>
+      </div>
+      <div id="introAllDoneMsg" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:14px;padding:16px 24px;max-width:400px;margin-bottom:24px;font-size:13px;color:#166534;text-align:center">
+        🎉 You've explored all 100 questions! Hit Reset to play again with fresh questions.
+      </div>
+      <div id="savedSoulmateContainer" style="display:none;width:100%;max-width:400px;margin-bottom:24px;margin-top:-8px;">
+        <div style="background:var(--gray-bg);border:1px solid var(--gray-border);border-radius:18px;padding:16px 20px;text-align:left;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow);">
+          <div id="savedSoulmateAvatar" style="width:48px;height:48px;border-radius:50%;color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">?</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:10px;color:var(--gray-text);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Your Last Mindalike</div>
+            <div id="savedSoulmateName" style="font-weight:700;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+            <div id="savedSoulmateScore" style="font-size:11px;color:var(--gray-text);margin-top:2px;">Match: —</div>
+          </div>
+          <button id="btnViewSavedResults">View Profile</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;">
+        <button class="btn-start" id="btnStart">Start the Quiz →</button>
+        <button class="btn-submit-quiz" id="btnSeeSoulmate" style="display:none; padding:16px 48px; font-size:15px;">See Your AI Mindalike</button>
+        <button class="btn-view-charts" id="btnViewGlobalStats">View Global Charts →</button>
+      </div>
+    </div>
+
+    <!-- AI Ethical Compass Explorer Section -->
+    <section class="compass-explorer-section">
+      <div class="compass-header">
+        <h2>AI Ethical Alignment Compass</h2>
+        <p>Explore where all 61 language models stand on key ethical principles, and compare their greatest points of philosophical disagreement side-by-side.</p>
+      </div>
+
+      <div class="compass-grid">
+        <!-- 2D Scatter Plot -->
+        <div class="compass-card">
+          <div class="compass-card-title">AI Ethical Alignment Map</div>
+          <div class="compass-canvas-wrap">
+            <canvas id="compassChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Interactive Comparison Tool -->
+        <div class="comparison-card">
+          <div class="compass-card-title" style="margin-bottom:12px;">Side-by-Side Model Comparison</div>
+          <p style="font-size:12px; color:var(--gray-text); line-height:1.5; margin-bottom:20px;">
+            Select any two language models below to dynamically extract and visualize the questions where they have the most extreme philosophical disagreements.
+          </p>
+
+          <div class="comparison-selectors">
+            <div class="comparison-select-wrap">
+              <label for="compareSelectA">AI Model A</label>
+              <select class="comparison-select" id="compareSelectA">
+                <option value="" disabled selected>Select Model A</option>
+              </select>
+            </div>
+            <div class="comparison-select-wrap">
+              <label for="compareSelectB">AI Model B</label>
+              <select class="comparison-select" id="compareSelectB">
+                <option value="" disabled selected>Select Model B</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="comparison-output" id="comparisonOutput">
+            <div class="comparison-empty">
+              <div class="comparison-empty-icon">⚖️</div>
+              <strong>No Models Selected</strong>
+              <p style="margin-top:6px;">Select two AI models from the dropdown menus above to calculate and display their greatest philosophical differences.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Quiz -->
+  <div class="view" id="viewQuiz">
+    <div class="quiz-wrap">
+      <div class="quiz-progress-bar-outer">
+        <div class="quiz-progress-bar-inner" id="quizProgressBar" style="width:0%"></div>
+      </div>
+      <div class="quiz-step-label" id="quizStepLabel">Question 1 of 15</div>
+      <div class="quiz-category-badge" id="quizCategoryBadge">category</div>
+      <div class="quiz-question-text" id="quizQuestionText">Loading question…</div>
+      <div id="quizAnswerArea"></div>
+      <div class="quiz-nav">
+        <button class="btn-quiz-nav" id="btnPrev">← Back</button>
+        <button class="btn-submit-quiz" id="btnSubmit" style="display:none">See My Mindalike</button>
+        <button class="btn-quiz-next" id="btnNext">Next →</button>
+      </div>
+      <div class="quiz-exit-row" style="text-align: center; margin-top: 24px;">
+        <button class="btn-quiz-nav" id="btnExitQuiz" style="border-color: var(--gray-border-dark);">↩ Exit to Mindalike Start</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="view" id="viewResults">
+    <div class="results-wrap">
+      <h2 id="resultsTitle">Your Ethical Profile</h2>
+
+      <!-- Soulmate card -->
+      <div class="soulmate-card" id="soulmateCard">
+        <div class="soulmate-avatar" id="soulmateAvatar">?</div>
+        <div class="soulmate-info">
+          <div class="soulmate-label">Your Ethical AI Mindalike</div>
+          <div class="soulmate-name" id="soulmateName">—</div>
+          <div class="soulmate-version" id="soulmateVersion">—</div>
+          <div class="soulmate-desc" id="soulmateDesc">—</div>
+        </div>
+        <div class="soulmate-score">
+          <div class="soulmate-score-num" id="soulmateScore">—</div>
+          <div class="soulmate-score-label">Match</div>
+        </div>
+      </div>
+
+      <!-- All scores -->
+      <div class="all-scores-row" id="allScoresRow"></div>
+
+      <!-- Toggle button for showing all 61 AI models -->
+      <div class="show-more-row" id="showMoreScoresRow" style="text-align: center; margin-top: -36px; margin-bottom: 48px;">
+        <button class="btn-show-more" id="btnToggleScores">
+          <span>Show All 61 AI Models</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+
+      <!-- Segmented Tab switcher -->
+      <div class="results-tabs" id="resultsTabs">
+        <button class="results-tab active" data-tab="personal" id="tabButtonPersonal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Your Alignment Insights
+        </button>
+        <button class="results-tab" data-tab="global" id="tabButtonGlobal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Global AI Statistics
+        </button>
+      </div>
+
+      <!-- Tab 1: Personal Alignment Insights -->
+      <div id="resultsPersonalSection" class="results-section">
+        <!-- DNA Fingerprint -->
+        <div class="dna-card" id="dnaCard">
+          <div class="chart-title">🧬 Your Ethical Fingerprint</div>
+          <div class="dna-sub">One bar per question. <strong style="color:var(--accent)">Color</strong> = your answer · <strong style="color:var(--gray-text)">Height</strong> = how far you strayed from the average. Hover any bar.</div>
+          <div class="dna-strip-wrap" id="dnaStripWrap">
+            <svg class="dna-strip-svg" id="dnaStrip" preserveAspectRatio="none"></svg>
+            <div class="dna-tooltip" id="dnaTooltip"></div>
+          </div>
+          <div class="dna-legend" id="dnaLegend"></div>
+        </div>
+
+        <!-- Constellation + Percentile + Category Radar Chart -->
+        <div class="charts-grid" id="extrasGrid">
+          <div class="chart-card col-2 unique-card" id="uniqueCard">
+            <div class="chart-title">🌟 Your Most Unique Answers</div>
+            <div class="unique-sub">Questions where you stood apart from the AI consensus the most.</div>
+            <div class="unique-list" id="uniqueList"></div>
+          </div>
+          <div class="chart-card percentile-card" id="percentileCard">
+            <div class="chart-title">Where You Stand</div>
+            <div class="pct-list" id="pctList"></div>
+          </div>
+          <div class="chart-card col-3" id="radarChartCard">
+            <div class="chart-title">Your Answers vs AI Models — by Category</div>
+            <div class="chart-canvas-wrap"><canvas id="radarChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Global AI Statistics -->
+      <div id="resultsGlobalSection" class="results-section hidden">
+        <div class="charts-grid">
+          <div class="chart-card col-3" id="distChartCard">
+            <div class="chart-title">Who Are People's Mindalikes?</div>
+            <div class="chart-canvas-wrap"><canvas id="distChart"></canvas></div>
+          </div>
+          <div class="chart-card col-3" id="leaderboardCard">
+            <div class="chart-title">Global Leaderboard</div>
+            <ul class="leaderboard" id="leaderboard"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="share-row" id="shareRow">
+        <button class="btn-share" id="btnDownloadCard">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download Card</span>
+        </button>
+        <button class="btn-share" id="btnCopyShare">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Copy Share Text</span>
+        </button>
+      </div>
+
+      <div class="retake-row">
+        <div style="margin-bottom:12px;font-size:12px;color:var(--gray-text)" id="retakeProgress"></div>
+        <button class="btn-retake" id="btnRetake">Next Round →</button>
+        <button class="btn-retake" id="btnRetakeReset" style="margin-left:10px;display:none">↩ Reset &amp; Start Over</button>
+        <button class="btn-view-charts" id="btnBackToIntro" style="margin-left:10px; padding: 12px 36px; font-size: 13px; box-shadow: none; background: var(--gray-border-dark);">↩ Mindalike Start</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Modal -->
+  <div id="comparisonModal" class="comp-modal" style="display:none;">
+    <div class="comp-modal-overlay" id="compModalOverlay"></div>
+    <div class="comp-modal-content">
+      <div class="comp-modal-header">
+        <div>
+          <h3 id="compModalTitle">Comparing Answers</h3>
+          <p id="compModalSubtitle">Model comparison details</p>
+        </div>
+        <button class="comp-modal-close" id="compModalCloseBtn">&times;</button>
+      </div>
+      <div class="comp-modal-body" id="compModalBody">
+        <!-- populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── State ──────────────────────────────────────
+  let allQuestions = [];    // full pool from server
+  let questions = [];       // active 20 for this session
+  let profiles = [];
+  let currentIdx = 0;
+  let userAnswers = {};
+  let cumulativeAnswers = {};
+  let sessionId = null;
+  let radarChartInst = null;
+  let humanChartInst = null;
+  let distChartInst = null;
+  let aiAnswersMap = {};    // profile_id -> question_id -> answer_value
+  let globalStats = null;
+  let currentScoresList = []; // for all scores collapsible list
+  let scoresExpanded = false; // whether list is expanded
+
+  const SCALE_LABELS = ['Strongly\nDisagree', 'Disagree', 'Neutral', 'Agree', 'Strongly\nAgree'];
+  const BATCH_SIZE = 20;
+  const LS_KEY = 'ethics_answered_ids';
+  const USER_ID_KEY = 'ethics_user_id';
+
+  function getUserId() {
+    let uid = localStorage.getItem(USER_ID_KEY);
+    if (!uid) {
+      uid = crypto.randomUUID();
+      localStorage.setItem(USER_ID_KEY, uid);
+    }
+    return uid;
+  }
+
+  // ── localStorage helpers ───────────────────────
+  function getAnsweredIds() {
+    try { return new Set(JSON.parse(localStorage.getItem(LS_KEY) || '[]')); }
+    catch { return new Set(); }
+  }
+
+  function saveAnsweredIds(ids) {
+    const existing = getAnsweredIds();
+    ids.forEach(id => existing.add(id));
+    localStorage.setItem(LS_KEY, JSON.stringify([...existing]));
+  }
+
+  function resetAnsweredIds() {
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem('ethics_last_result');
+    localStorage.removeItem('ethics_user_answers');
+    localStorage.removeItem('ethics_cumulative_answers');
+    localStorage.removeItem('ethics_last_questions');
+    localStorage.removeItem('ethics_session_id');
+    cumulativeAnswers = {};
+    const container = document.getElementById('savedSoulmateContainer');
+    if (container) container.style.display = 'none';
+  }
+
+  function checkSavedSoulmate() {
+    const saved = localStorage.getItem('ethics_last_result');
+    const container = document.getElementById('savedSoulmateContainer');
+    if (!saved) {
+      if (container) container.style.display = 'none';
+      return;
+    }
+    try {
+      const data = JSON.parse(saved);
+      const { soulmate } = data;
+      if (!soulmate) {
+        if (container) container.style.display = 'none';
+        return;
+      }
+
+      const color = soulmate.color_hex || '#0071e3';
+      const initials = soulmate.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+      document.getElementById('savedSoulmateAvatar').textContent = initials;
+      document.getElementById('savedSoulmateAvatar').style.background = color;
+      document.getElementById('savedSoulmateName').textContent = getFullName(soulmate.name, soulmate.model_version);
+      document.getElementById('savedSoulmateScore').textContent = `Match: ${soulmate.match_pct}%`;
+
+      if (container) container.style.display = 'block';
+    } catch (e) {
+      console.warn("Failed to check saved soulmate:", e);
+      if (container) container.style.display = 'none';
+    }
+  }
+
+  function showSavedResults() {
+    const saved = localStorage.getItem('ethics_last_result');
+    if (!saved || !globalStats) return;
+    try {
+      const data = JSON.parse(saved);
+      cumulativeAnswers = JSON.parse(localStorage.getItem('ethics_cumulative_answers') || '{}');
+
+      showView('viewResults');
+      renderResults(data, globalStats);
+      window.scrollTo(0, 0);
+    } catch(e) {
+      console.warn("Failed to parse saved results:", e);
+    }
+  }
+
+  function getUnanswered() {
+    const answered = getAnsweredIds();
+    return allQuestions.filter(q => !answered.has(q.id));
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ── Pick 20 random unanswered questions ────────
+  function pickSessionQuestions() {
+    const pool = getUnanswered();
+    if (pool.length === 0) return [];
+    return shuffle(pool).slice(0, BATCH_SIZE);
+  }
+
+  // ── Update intro progress display ─────────────
+  function updateIntroProgress() {
+    if (allQuestions.length === 0) return;
+    const answered = getAnsweredIds();
+    const count = Math.min(answered.size, allQuestions.length);
+    const total = allQuestions.length;
+    const pct = Math.round(count / total * 100);
+
+    document.getElementById('introExplored').textContent = `${count}/${total}`;
+    document.getElementById('introProgressBar').style.width = pct + '%';
+
+    const wrap = document.getElementById('introProgressWrap');
+    const allDone = document.getElementById('introAllDoneMsg');
+    const btnStart = document.getElementById('btnStart');
+    const btnSee = document.getElementById('btnSeeSoulmate');
+
+    if (count > 0) wrap.style.display = 'block';
+
+    if (count >= total) {
+      allDone.style.display = 'block';
+      btnStart.style.display = 'none';
+    } else {
+      allDone.style.display = 'none';
+      btnStart.style.display = 'inline-block';
+      const remaining = total - count;
+      btnStart.textContent = count === 0 ? 'Start the Quiz →' : `Next Round → (${remaining} left)`;
+    }
+
+    if (btnSee) {
+      btnSee.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+
+    checkSavedSoulmate();
+  }
+
+  // ── Init ───────────────────────────────────────
+  async function init() {
+    try {
+      userAnswers = JSON.parse(localStorage.getItem('ethics_user_answers') || '{}');
+      cumulativeAnswers = JSON.parse(localStorage.getItem('ethics_cumulative_answers') || '{}');
+      sessionId = localStorage.getItem('ethics_session_id') || null;
+    } catch {
+      userAnswers = {};
+      cumulativeAnswers = {};
+      sessionId = null;
+    }
+
+    // Clear old caches programmatically from client side to ensure freshness
+    if (window.caches) {
+      try {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          if (!key.includes('aiobs-v7')) {
+            await caches.delete(key);
+            console.log('Purged stale cache:', key);
+          }
+        }
+      } catch (e) {
+        console.warn('Cache clearing failed:', e);
+      }
+    }
+
+    // Register/update service worker to keep caching behavior in sync
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        reg.update();
+      }).catch(e => console.warn('SW registration failed:', e));
+    }
+
+    try {
+      const [qRes, pRes, statsRes, aRes] = await Promise.all([
+        fetch('/api/ethics/questions'),
+        fetch('/api/ethics/ai-profiles'),
+        fetch('/api/ethics/stats'),
+        fetch('/api/ethics/ai-answers')
+      ]);
+      allQuestions = await qRes.json();
+      profiles = await pRes.json();
+      const stats = await statsRes.json();
+      globalStats = stats;
+      const rawAnswers = await aRes.json();
+
+      if (!Array.isArray(allQuestions) || allQuestions.length === 0) {
+        const loader = document.getElementById('viewLoading');
+        if (loader) {
+          loader.style.opacity = 0;
+          setTimeout(() => loader.style.display = 'none', 400);
+        }
+        showView('viewIntro');
+        document.querySelector('.intro-wrap').innerHTML = `
+          <div class="empty-questions">
+            <strong>No Questions Yet</strong>
+            The ethical questions haven't been loaded yet. Add them to <code>data/ethical_questions.csv</code> and restart the server.
+          </div>`;
+        return;
+      }
+
+      document.getElementById('introAICount').textContent = profiles.length;
+      document.getElementById('introUserCount').textContent =
+        stats.total_users > 0 ? stats.total_users.toLocaleString() : '—';
+      updateIntroProgress();
+
+      const loader = document.getElementById('viewLoading');
+      if (loader) {
+        loader.style.opacity = 0;
+        setTimeout(() => loader.style.display = 'none', 400);
+      }
+      showView('viewIntro');
+
+      // Initialize the interactive Ethical Compass
+      initEthicalCompass(profiles, rawAnswers, allQuestions);
+    } catch (e) {
+      document.getElementById('viewLoading').textContent = 'Failed to load — is the server running?';
+    }
+  }
+
+  // ── View switching ─────────────────────────────
+  function showView(id) {
+    ['viewLoading', 'viewIntro', 'viewQuiz', 'viewResults'].forEach(v => {
+      const el = document.getElementById(v);
+      if (el) el.style.display = 'none';
+    });
+    const target = document.getElementById(id);
+    if (target) target.style.display = id === 'viewLoading' ? 'flex' : 'block';
+  }
+
+  // ── Quiz logic ─────────────────────────────────
+  function startQuiz() {
+    const picked = pickSessionQuestions();
+    if (picked.length === 0) return; // all done, button should be hidden
+    questions = picked;
+    currentIdx = 0;
+    userAnswers = {};
+    localStorage.removeItem('ethics_user_answers');
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      localStorage.setItem('ethics_session_id', sessionId);
+      cumulativeAnswers = {};
+      localStorage.removeItem('ethics_cumulative_answers');
+    }
+    renderQuestion();
+    showView('viewQuiz');
+  }
+
+  function renderQuestion() {
+    const q = questions[currentIdx];
+    const total = questions.length;
+    const pct = ((currentIdx) / total) * 100;
+
+    document.getElementById('quizProgressBar').style.width = pct + '%';
+    document.getElementById('quizStepLabel').textContent = `Question ${currentIdx + 1} of ${total}`;
+    document.getElementById('quizCategoryBadge').textContent = (q.category || '').replace(/_/g, ' ');
+    document.getElementById('quizQuestionText').textContent = q.question_text;
+
+    const area = document.getElementById('quizAnswerArea');
+    area.innerHTML = '';
+    const saved = userAnswers[q.id];
+
+    if (q.question_type === 'scale') {
+      const group = document.createElement('div');
+      group.className = 'scale-group';
+      for (let i = 1; i <= 5; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'scale-btn' + (saved === i ? ' selected' : '');
+        btn.setAttribute('data-val', i);
+        btn.innerHTML = `<span class="num">${i}</span><span class="lbl">${SCALE_LABELS[i-1]}</span>`;
+        btn.addEventListener('click', () => {
+          userAnswers[q.id] = i;
+          localStorage.setItem('ethics_user_answers', JSON.stringify(userAnswers));
+          cumulativeAnswers[q.id] = i;
+          localStorage.setItem('ethics_cumulative_answers', JSON.stringify(cumulativeAnswers));
+          group.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          updateNav();
+        });
+        group.appendChild(btn);
+      }
+      area.appendChild(group);
+    } else {
+      const group = document.createElement('div');
+      group.className = 'choice-group';
+      const opts = [
+        { val: 1, letter: 'A', text: q.option_a },
+        { val: 2, letter: 'B', text: q.option_b },
+        q.option_c ? { val: 3, letter: 'C', text: q.option_c } : null,
+        q.option_d ? { val: 4, letter: 'D', text: q.option_d } : null
+      ].filter(Boolean);
+
+      for (const opt of opts) {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn' + (saved === opt.val ? ' selected' : '');
+        btn.setAttribute('data-val', opt.val);
+        btn.innerHTML = `<span class="choice-letter">${opt.letter}</span><span class="choice-text">${opt.text}</span>`;
+        btn.addEventListener('click', () => {
+          userAnswers[q.id] = opt.val;
+          localStorage.setItem('ethics_user_answers', JSON.stringify(userAnswers));
+          cumulativeAnswers[q.id] = opt.val;
+          localStorage.setItem('ethics_cumulative_answers', JSON.stringify(cumulativeAnswers));
+          group.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          updateNav();
+        });
+        group.appendChild(btn);
+      }
+      area.appendChild(group);
+    }
+
+    updateNav();
+  }
+
+  function updateNav() {
+    const q = questions[currentIdx];
+    const answered = userAnswers[q.id] !== undefined;
+    const isLast = currentIdx === questions.length - 1;
+    const canFinish = currentIdx >= 4; // show Finish button from question 5 onwards
+
+    document.getElementById('btnPrev').disabled = currentIdx === 0;
+    document.getElementById('btnNext').style.display = isLast ? 'none' : 'inline-block';
+    document.getElementById('btnNext').disabled = !answered;
+    document.getElementById('btnSubmit').style.display = canFinish ? 'inline-block' : 'none';
+    document.getElementById('btnSubmit').disabled = !answered;
+  }
+
+  // ── Submit ─────────────────────────────────────
+  function saveResultToStorage(data, qs) {
+    const slim = {
+      soulmate: data.soulmate,
+      all_scores: (data.all_scores || []).map(({ description, ...rest }) => rest)
+    };
+    const slimQs = (qs || []).map(q => ({
+      id: q.id, question_text: q.question_text, question_type: q.question_type,
+      category: q.category, option_a: q.option_a, option_b: q.option_b,
+      option_c: q.option_c, option_d: q.option_d
+    }));
+    try {
+      localStorage.setItem('ethics_last_result', JSON.stringify(slim));
+      localStorage.setItem('ethics_user_answers', JSON.stringify(userAnswers));
+      localStorage.setItem('ethics_last_questions', JSON.stringify(slimQs));
+    } catch (e) {
+      console.warn('localStorage quota exceeded, skipping result persistence:', e);
+    }
+  }
+
+  async function submitQuiz() {
+    document.getElementById('btnSubmit').disabled = true;
+    document.getElementById('btnSubmit').textContent = 'Calculating…';
+
+    const answersArr = Object.entries(userAnswers).map(([qid, val]) => ({
+      question_id: parseInt(qid),
+      answer_value: val
+    }));
+
+    try {
+      const res = await fetch('/api/ethics/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, user_id: getUserId(), answers: answersArr })
+      });
+      const data = await res.json();
+
+      const statsRes = await fetch('/api/ethics/stats');
+      const stats = await statsRes.json();
+
+      // Persist answered question IDs to localStorage
+      saveAnsweredIds(answersArr.map(a => a.question_id));
+
+      const answeredIds = new Set(Object.keys(cumulativeAnswers).map(Number));
+      const sessionQuestions = allQuestions.filter(q => answeredIds.has(q.id));
+      saveResultToStorage(data, sessionQuestions);
+
+      showView('viewResults');
+      renderResults(data, stats);
+      window.scrollTo(0, 0);
+      
+      // Reset button state for future turs
+      const btnSubmit = document.getElementById('btnSubmit');
+      btnSubmit.textContent = 'See My Mindalike';
+      btnSubmit.disabled = false;
+    } catch (e) {
+      console.error('Quiz submission failed:', e);
+      alert('Quiz submission failed: ' + e.message + '\n' + e.stack);
+      document.getElementById('btnSubmit').textContent = 'Error — try again';
+      document.getElementById('btnSubmit').disabled = false;
+    }
+  }
+
+  async function seeSoulmateFromLanding() {
+    const answersArr = Object.entries(cumulativeAnswers).map(([qid, val]) => ({
+      question_id: parseInt(qid),
+      answer_value: val
+    }));
+    if (answersArr.length === 0) return;
+
+    if (!sessionId) {
+      sessionId = localStorage.getItem('ethics_session_id') || crypto.randomUUID();
+      localStorage.setItem('ethics_session_id', sessionId);
+    }
+
+    const btn = document.getElementById('btnSeeSoulmate');
+    btn.disabled = true;
+    btn.textContent = 'Calculating…';
+
+    try {
+      const res = await fetch('/api/ethics/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, user_id: getUserId(), answers: answersArr })
+      });
+      const data = await res.json();
+
+      const statsRes = await fetch('/api/ethics/stats');
+      const stats = await statsRes.json();
+
+      // Persist answered question IDs to localStorage
+      saveAnsweredIds(answersArr.map(a => a.question_id));
+
+      const answeredIds = new Set(Object.keys(cumulativeAnswers).map(Number));
+      const sessionQuestions = allQuestions.filter(q => answeredIds.has(q.id));
+      saveResultToStorage(data, sessionQuestions);
+
+      showView('viewResults');
+      renderResults(data, stats);
+      window.scrollTo(0, 0);
+      
+      // Reset button state for returning users
+      btn.textContent = 'See Your AI Mindalike';
+      btn.disabled = false;
+    } catch (e) {
+      console.error('Landing submission failed:', e);
+      alert('Landing submission failed: ' + e.message);
+      btn.textContent = 'Error — try again';
+      btn.disabled = false;
+    }
+  }
+
+  // ── DNA Fingerprint ────────────────────────────
+  // Per-question "global average answer" = mean of all AI answers for that question
+  function globalAnswerStats(qid, qType) {
+    const vals = [];
+    for (const pid in aiAnswersMap) {
+      const v = aiAnswersMap[pid][qid];
+      if (v !== undefined) vals.push(v);
+    }
+    if (vals.length === 0) return null;
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const max = qType === 'scale' ? 5 : (qType === 'multiple_choice' ? 4 : 2);
+    return { mean, max, count: vals.length };
+  }
+
+  function buildFingerprint(allScores) {
+    const svg = document.getElementById('dnaStrip');
+    const tooltip = document.getElementById('dnaTooltip');
+    const wrap = document.getElementById('dnaStripWrap');
+    const legend = document.getElementById('dnaLegend');
+    if (!svg) return;
+
+    svg.innerHTML = '';
+    legend.innerHTML = '';
+
+    const qList = questions.filter(q => userAnswers[q.id] !== undefined);
+    if (qList.length === 0) {
+      document.getElementById('dnaCard').style.display = 'none';
+      return;
+    }
+    document.getElementById('dnaCard').style.display = 'block';
+
+    // Color palette by answer-value bucket (low → high) matching loading screen dots
+    const palette = ['#d65a4a', '#d68827', '#9655c8', '#3f7bbf', '#1ea985'];
+    const W = 800, H = 160;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const padX = 8, padY = 28;
+    const barW = (W - padX * 2) / qList.length;
+    const gap = Math.min(2, barW * 0.18);
+    const innerW = barW - gap;
+    const maxBarH = H - padY * 2;
+
+    const seen = new Set();
+
+    qList.forEach((q, i) => {
+      const ua = userAnswers[q.id];
+      const gs = globalAnswerStats(q.id, q.question_type);
+      const max = q.question_type === 'scale' ? 5 : (q.question_type === 'multiple_choice' ? 4 : 2);
+
+      // Color = bucket the user's answer to a 5-color scale
+      const tIdx = Math.min(palette.length - 1, Math.round(((ua - 1) / Math.max(1, max - 1)) * (palette.length - 1)));
+      const color = palette[tIdx];
+      seen.add(tIdx);
+
+      // Height = deviation from global mean (normalized 0..1), min 0.22 so every bar reads
+      let deviation = 0.22;
+      if (gs) {
+        const norm = Math.abs(ua - gs.mean) / (max - 1);
+        deviation = 0.22 + Math.min(1, norm) * 0.78;
+      }
+      const barH = maxBarH * deviation;
+      const x = padX + i * barW;
+      const y = padY + (maxBarH - barH);
+
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', x);
+      rect.setAttribute('y', y);
+      rect.setAttribute('width', innerW);
+      rect.setAttribute('height', barH);
+      rect.setAttribute('rx', Math.min(2.5, innerW / 3));
+      rect.setAttribute('fill', color);
+      rect.setAttribute('opacity', 0.92);
+      rect.style.transition = 'opacity 0.15s, transform 0.15s';
+      rect.style.transformOrigin = `${x + innerW / 2}px ${H}px`;
+
+      rect.addEventListener('mouseenter', (ev) => {
+        rect.setAttribute('opacity', 1);
+        // Find AI(s) who agreed with this exact answer
+        const agreeing = [];
+        for (const s of allScores) {
+          const aiAns = (aiAnswersMap[s.id] || {})[q.id];
+          if (aiAns === ua) agreeing.push(s.name);
+        }
+        const SCALE_MINI = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
+        let userLabel = '';
+        if (q.question_type === 'scale') userLabel = `${ua}/5 — ${SCALE_MINI[ua - 1]}`;
+        else {
+          const opts = [null, q.option_a, q.option_b, q.option_c, q.option_d];
+          userLabel = opts[ua] || `Option ${ua}`;
+        }
+        const cat = (q.category || '').replace(/_/g, ' ');
+        const devLabel = gs ? `${Math.round((Math.abs(ua - gs.mean) / (max - 1)) * 100)}% from average` : 'No comparison data';
+        const agreeLabel = agreeing.length > 0
+          ? `<strong>${agreeing.slice(0, 3).join(', ')}</strong> agreed`
+          : 'No AI agreed';
+        tooltip.innerHTML = `
+          <div class="dna-tooltip-q">${q.question_text}</div>
+          <div class="dna-tooltip-meta">Your answer: <strong>${userLabel}</strong></div>
+          <div class="dna-tooltip-meta" style="margin-top:4px">${cat} · ${devLabel}</div>
+          <div class="dna-tooltip-meta" style="margin-top:4px">${agreeLabel}</div>`;
+        const rectBox = svg.getBoundingClientRect();
+        const wrapBox = wrap.getBoundingClientRect();
+        const cx = (x + innerW / 2) / W * rectBox.width + (rectBox.left - wrapBox.left);
+        const cy = y / H * rectBox.height + (rectBox.top - wrapBox.top);
+        tooltip.style.left = cx + 'px';
+        tooltip.style.top = cy + 'px';
+        tooltip.classList.add('visible');
+      });
+      rect.addEventListener('mouseleave', () => {
+        rect.setAttribute('opacity', 0.92);
+        tooltip.classList.remove('visible');
+      });
+      svg.appendChild(rect);
+    });
+
+    // Legend
+    const legLabels = ['Strong Low', 'Low', 'Neutral', 'High', 'Strong High'];
+    seen.forEach(idx => {
+      const item = document.createElement('div');
+      item.className = 'dna-legend-item';
+      item.innerHTML = `<span class="dna-legend-dot" style="background:${palette[idx]}"></span>${legLabels[idx]}`;
+      legend.appendChild(item);
+    });
+  }
+
+  // ── Unique Answers (most divergent vs AI consensus) ──
+  function buildUniqueAnswers() {
+    const list = document.getElementById('uniqueList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const qList = questions.filter(q => userAnswers[q.id] !== undefined);
+    if (qList.length === 0) {
+      list.innerHTML = '<div class="unique-empty">No answers yet.</div>';
+      return;
+    }
+
+    const scored = qList.map(q => {
+      const ua = userAnswers[q.id];
+      const aiVals = [];
+      for (const pid in aiAnswersMap) {
+        const v = aiAnswersMap[pid][q.id];
+        if (v !== undefined) aiVals.push(v);
+      }
+      let agreePct = 0;
+      if (aiVals.length > 0) {
+        const matches = aiVals.filter(v => v === ua).length;
+        agreePct = (matches / aiVals.length) * 100;
+      }
+      return { q, ua, agreePct, aiCount: aiVals.length };
+    }).filter(x => x.aiCount > 0);
+
+    scored.sort((a, b) => a.agreePct - b.agreePct);
+    const top = scored.slice(0, 5);
+
+    if (top.length === 0) {
+      list.innerHTML = '<div class="unique-empty">No comparison data available.</div>';
+      return;
+    }
+
+    const SCALE_MINI = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
+    top.forEach(({ q, ua, agreePct, aiCount }) => {
+      let userLabel = '';
+      if (q.question_type === 'scale') userLabel = `${ua}/5 — ${SCALE_MINI[ua - 1]}`;
+      else {
+        const opts = [null, q.option_a, q.option_b, q.option_c, q.option_d];
+        userLabel = opts[ua] || `Option ${ua}`;
+      }
+      const cat = (q.category || '').replace(/_/g, ' ');
+      const agreeRounded = Math.round(agreePct);
+      const rareLabel = agreeRounded === 0
+        ? 'No AI agreed'
+        : `Only ${agreeRounded}% of AIs agreed`;
+
+      const row = document.createElement('div');
+      row.className = 'unique-row';
+      row.innerHTML = `
+        <div class="unique-row-top">
+          <div class="unique-cat">${cat}</div>
+          <div class="unique-rare">${rareLabel}</div>
+        </div>
+        <div class="unique-q">${q.question_text}</div>
+        <div class="unique-ans">Your answer: <strong>${userLabel}</strong> · ${aiCount} AIs compared</div>`;
+      list.appendChild(row);
+    });
+  }
+
+  // ── Constellation (removed; replaced by Top Matches) ──
+  function buildConstellation(_allScoresFull) { /* deprecated */ }
+  let constellationRAF = null;
+  function _unusedConstellation(allScoresFull) {
+    const canvas = document.getElementById('constellationCanvas');
+    if (!canvas || !allScoresFull || allScoresFull.length === 0) return;
+    // Cap stars to top 15 to keep the night sky readable
+    const allScores = allScoresFull.slice(0, 15);
+    const wrap = canvas.parentElement;
+    const dpr = window.devicePixelRatio || 1;
+
+    function resize() {
+      const w = wrap.clientWidth, h = wrap.clientHeight;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+      return { w, h };
+    }
+    let { w, h } = resize();
+
+    // Build stars: position around center, distance inversely proportional to match%
+    const cx = () => canvas.width / 2;
+    const cy = () => canvas.height / 2;
+    const minDist = () => Math.min(canvas.width, canvas.height) * 0.18;
+    const maxDist = () => Math.min(canvas.width, canvas.height) * 0.45;
+
+    const stars = allScores.map((s, i) => {
+      const angle = (i / allScores.length) * Math.PI * 2 - Math.PI / 2;
+      // Higher match -> closer to user planet
+      const t = Math.max(0, Math.min(1, (s.match_pct || 0) / 100));
+      const dist = maxDist() - (maxDist() - minDist()) * t;
+      return {
+        score: s, angle, dist,
+        targetDist: dist,
+        radius: 6 + (s.match_pct / 100) * 14,
+        color: s.color_hex || '#ffffff',
+        twinkle: Math.random() * Math.PI * 2,
+        label: s.name + (s.model_version ? ' ' + s.model_version : '')
+      };
+    });
+
+    // Background twinklers (anonymized "other users")
+    const twinklers = Array.from({ length: 80 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.4 + 0.3,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.5 + Math.random() * 1.5
+    }));
+
+    let mouse = { x: -1, y: -1 };
+    canvas.onmousemove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = (e.clientX - rect.left) * dpr;
+      mouse.y = (e.clientY - rect.top) * dpr;
+    };
+    canvas.onmouseleave = () => { mouse.x = -1; mouse.y = -1; };
+
+    if (constellationRAF) cancelAnimationFrame(constellationRAF);
+    let t0 = performance.now();
+
+    function draw(now) {
+      const elapsed = (now - t0) / 1000;
+
+      // Dynamic fallback check: if canvas has 0 width/height, re-run resize once visible
+      if (canvas.width === 0 || canvas.height === 0 || w === 0 || h === 0) {
+        const dims = resize();
+        w = dims.w;
+        h = dims.h;
+        // Re-calculate star positions with new dimensions
+        stars.forEach((star, i) => {
+          const angle = (i / allScores.length) * Math.PI * 2 - Math.PI / 2;
+          const t = Math.max(0, Math.min(1, (star.score.match_pct || 0) / 100));
+          const dist = maxDist() - (maxDist() - minDist()) * t;
+          star.angle = angle;
+          star.dist = dist;
+          star.targetDist = dist;
+          star.radius = 6 + (star.score.match_pct / 100) * 14;
+        });
+        // Re-generate background twinklers in the new dimensions
+        twinklers.forEach(tw => {
+          tw.x = Math.random() * canvas.width;
+          tw.y = Math.random() * canvas.height;
+        });
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Background twinklers
+      for (const tw of twinklers) {
+        const alpha = 0.18 + 0.32 * (0.5 + 0.5 * Math.sin(tw.phase + elapsed * tw.speed));
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(tw.x, tw.y, tw.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Concentric orbit rings
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i <= 3; i++) {
+        ctx.beginPath();
+        ctx.arc(cx(), cy(), (minDist() + (maxDist() - minDist()) * (i / 3)), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Each star
+      let hovered = null;
+      for (const star of stars) {
+        // Subtle orbital drift
+        const wob = Math.sin(elapsed * 0.4 + star.twinkle) * 6;
+        const sx = cx() + Math.cos(star.angle) * (star.dist + wob);
+        const sy = cy() + Math.sin(star.angle) * (star.dist + wob);
+
+        // Glow
+        const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, star.radius * 4);
+        glow.addColorStop(0, star.color + 'cc');
+        glow.addColorStop(0.4, star.color + '55');
+        glow.addColorStop(1, 'transparent');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(sx, sy, star.radius * 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Core
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(sx, sy, star.radius * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Connecting line to user
+        ctx.strokeStyle = star.color + '55';
+        ctx.lineWidth = 1 + (star.score.match_pct / 100) * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx(), cy());
+        ctx.lineTo(sx, sy);
+        ctx.stroke();
+
+        // Label
+        ctx.fillStyle = 'rgba(255,255,255,0.78)';
+        ctx.font = '600 11px var(--font-sans, sans-serif)';
+        ctx.textAlign = 'center';
+        ctx.fillText(star.label, sx, sy - star.radius - 10);
+        ctx.fillStyle = star.color;
+        ctx.font = '700 11px var(--font-sans, sans-serif)';
+        ctx.fillText(`${star.score.match_pct}%`, sx, sy + star.radius + 16);
+
+        // Hover detection
+        if (mouse.x > 0) {
+          const dx = mouse.x - sx, dy = mouse.y - sy;
+          if (dx * dx + dy * dy < (star.radius * 4) ** 2) hovered = star;
+        }
+      }
+
+      // Central planet (You)
+      const pulse = 1 + 0.08 * Math.sin(elapsed * 2);
+      const planetR = 18 * pulse;
+      const planetGlow = ctx.createRadialGradient(cx(), cy(), 0, cx(), cy(), planetR * 3);
+      planetGlow.addColorStop(0, 'rgba(0, 113, 227, 0.35)');
+      planetGlow.addColorStop(0.5, 'rgba(0, 113, 227, 0.1)');
+      planetGlow.addColorStop(1, 'transparent');
+      ctx.fillStyle = planetGlow;
+      ctx.beginPath();
+      ctx.arc(cx(), cy(), planetR * 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      const planet = ctx.createRadialGradient(cx() - 4, cy() - 4, 0, cx(), cy(), planetR);
+      planet.addColorStop(0, '#ffffff');
+      planet.addColorStop(1, '#0071e3');
+      ctx.fillStyle = planet;
+      ctx.beginPath();
+      ctx.arc(cx(), cy(), planetR, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '700 10px var(--font-sans, sans-serif)';
+      ctx.textAlign = 'center';
+      ctx.fillText('YOU', cx(), cy() + 3);
+
+      constellationRAF = requestAnimationFrame(draw);
+    }
+    constellationRAF = requestAnimationFrame(draw);
+
+    // Resize handling (debounced)
+    if (!buildConstellation._resizeBound) {
+      window.addEventListener('resize', () => {
+        if (canvas.isConnected) {
+          const dims = resize();
+          w = dims.w; h = dims.h;
+        }
+      });
+      buildConstellation._resizeBound = true;
+    }
+  }
+
+  // ── Percentile chips ───────────────────────────
+  function buildPercentileChips(soulmate, allScores, distribution) {
+    const list = document.getElementById('pctList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const rows = [];
+
+    // 1) % of users who got this same soulmate
+    if (soulmate && Array.isArray(distribution)) {
+      const dist = distribution.find(d => d.id === soulmate.id);
+      const pct = dist ? dist.soulmate_pct : 0;
+      rows.push({
+        label: `You're with the <em>${pct}%</em> of humans whose mindalike is ${soulmate.name}`,
+        value: pct
+      });
+    }
+
+    // 2) Match strength vs average human match for soulmate
+    if (soulmate && Array.isArray(distribution)) {
+      const dist = distribution.find(d => d.id === soulmate.id);
+      const avgHuman = dist && dist.avg_human_match !== null ? dist.avg_human_match : null;
+      if (avgHuman !== null) {
+        const diff = soulmate.match_pct - avgHuman;
+        const sign = diff >= 0 ? '+' : '';
+        rows.push({
+          label: `Your match with ${soulmate.name} is <em>${sign}${diff}pp</em> vs the average human (${avgHuman}%)`,
+          value: Math.min(100, soulmate.match_pct)
+        });
+      }
+    }
+
+    // 3) Spread between top and bottom AI — "ethical decisiveness"
+    if (allScores && allScores.length >= 2) {
+      const top = allScores[0].match_pct;
+      const bot = allScores[allScores.length - 1].match_pct;
+      const spread = top - bot;
+      rows.push({
+        label: `Ethical decisiveness: <em>${spread}pp</em> between your best and worst match`,
+        value: spread
+      });
+    }
+
+    // 4) Average match across all AIs — "AI-friendliness"
+    if (allScores && allScores.length > 0) {
+      const avg = Math.round(allScores.reduce((a, s) => a + s.match_pct, 0) / allScores.length);
+      rows.push({
+        label: `On average, you agree with AI <em>${avg}%</em> of the time`,
+        value: avg
+      });
+    }
+
+    rows.forEach((r, i) => {
+      const row = document.createElement('div');
+      row.className = 'pct-row';
+      row.innerHTML = `
+        <div class="pct-label">${r.label}</div>
+        <div class="pct-bar-outer"><div class="pct-bar-inner" style="width:0%"></div></div>
+        <div class="pct-num">${r.value}%</div>`;
+      list.appendChild(row);
+      // Animate width after insert
+      requestAnimationFrame(() => {
+        const inner = row.querySelector('.pct-bar-inner');
+        if (inner) setTimeout(() => { inner.style.width = Math.max(2, Math.min(100, r.value)) + '%'; }, 80 + i * 90);
+      });
+    });
+  }
+
+  // ── User point on Ethical Compass ──────────────
+  function computeUserCompass() {
+    let sumX = 0, countX = 0, sumY = 0, countY = 0;
+    const ua = userAnswers;
+    const addBinary = (qid, axis) => {
+      const v = ua[qid];
+      if (v === undefined) return;
+      if (axis === 'x') { sumX += v === 1 ? 100 : -100; countX++; }
+      else { sumY += v === 1 ? 100 : -100; countY++; }
+    };
+    const addScale = (qid, axis) => {
+      const v = ua[qid];
+      if (v === undefined) return;
+      if (axis === 'x') { sumX += (v - 3) * 50; countX++; }
+      else { sumY += (v - 3) * 50; countY++; }
+    };
+    [6, 18, 19, 58].forEach(q => addBinary(q, 'x'));
+    [68, 71, 77, 91].forEach(q => addScale(q, 'x'));
+    [1, 5, 11, 24].forEach(q => addBinary(q, 'y'));
+    [67, 72, 83, 86, 89].forEach(q => addScale(q, 'y'));
+    return {
+      x: countX > 0 ? sumX / countX : 0,
+      y: countY > 0 ? sumY / countY : 0,
+      hasData: countX > 0 || countY > 0
+    };
+  }
+
+  function addUserToCompass() {
+    if (!compassChartInst) return;
+    const { x, y, hasData } = computeUserCompass();
+    if (!hasData) return;
+    // Remove any prior "you" dataset
+    compassChartInst.data.datasets = compassChartInst.data.datasets.filter(ds => ds.label !== '__you__');
+    compassChartInst.data.datasets.push({
+      label: '__you__',
+      data: [{ x, y, label: 'YOU' }],
+      backgroundColor: '#0071e3',
+      borderColor: '#fff',
+      borderWidth: 3,
+      pointRadius: 11,
+      pointHoverRadius: 14,
+      pointStyle: 'circle',
+      order: -1
+    });
+    compassChartInst.update();
+  }
+
+  // ── Shareable card export ──────────────────────
+  async function downloadShareCard() {
+    if (typeof html2canvas !== 'function') {
+      alert('Share library failed to load.');
+      return;
+    }
+    const btn = document.getElementById('btnDownloadCard');
+    const original = btn.innerHTML;
+    btn.innerHTML = '<span>Rendering…</span>';
+    btn.disabled = true;
+
+    // Build an off-screen card from soulmate + percentiles + fingerprint
+    const soulmate = document.getElementById('soulmateCard');
+    const dna = document.getElementById('dnaCard');
+    const pct = document.getElementById('percentileCard');
+
+    const stage = document.createElement('div');
+    stage.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;background:#0a0b10;padding:48px;border-radius:32px;font-family:JetBrains Mono,monospace;';
+    stage.innerHTML = `
+      <div style="color:#0071e3;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">AI Ethical Mindalike</div>
+      <div style="color:#fff;font-size:36px;font-weight:800;margin-bottom:24px">My result</div>
+    `;
+    stage.appendChild(soulmate.cloneNode(true));
+    stage.appendChild(dna.cloneNode(true));
+    stage.appendChild(pct.cloneNode(true));
+    stage.querySelectorAll('.soulmate-card').forEach(el => { el.style.marginBottom = '24px'; });
+    document.body.appendChild(stage);
+
+    try {
+      const canvas = await html2canvas(stage, { backgroundColor: '#0f0f1e', scale: 1.5, useCORS: true });
+      const link = document.createElement('a');
+      link.download = 'my-ai-mindalike.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (e) {
+      console.error('Share card export failed:', e);
+      alert('Export failed: ' + e.message);
+    } finally {
+      document.body.removeChild(stage);
+      btn.innerHTML = original;
+      btn.disabled = false;
+    }
+  }
+
+  async function copyShareText() {
+    const btn = document.getElementById('btnCopyShare');
+    const nameEl = document.getElementById('soulmateName');
+    const scoreEl = document.getElementById('soulmateScore');
+    const text = `My AI Ethical Mindalike is ${nameEl.textContent} (${scoreEl.textContent} match). Find yours: ${window.location.origin}/ethics.html`;
+    try {
+      await navigator.clipboard.writeText(text);
+      const original = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.querySelector('span').textContent = 'Copied!';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = original;
+      }, 1800);
+    } catch (e) {
+      prompt('Copy this text:', text);
+    }
+  }
+
+  // All score chips with expand/collapse logic
+  function renderScoreChips() {
+    const row = document.getElementById('allScoresRow');
+    if (!row) return;
+    row.innerHTML = '';
+    
+    const visibleScores = scoresExpanded ? currentScoresList : currentScoresList.slice(0, 5);
+    for (const s of visibleScores) {
+      const c = s.color_hex || '#0071e3';
+      const chip = document.createElement('div');
+      chip.className = 'score-chip';
+      chip.style.cursor = 'pointer';
+      chip.title = 'Click to compare answers side-by-side!';
+      chip.innerHTML = `
+        <div class="score-chip-name">${getFullName(s.name, s.model_version)}</div>
+        <div class="score-chip-bar-outer">
+          <div class="score-chip-bar-inner" style="width:${s.match_pct}%;background:${c}"></div>
+        </div>
+        <div class="score-chip-pct">${s.match_pct}% match</div>`;
+      
+      chip.addEventListener('click', () => {
+        openComparisonModal(s);
+      });
+      row.appendChild(chip);
+    }
+    
+    const btnToggle = document.getElementById('btnToggleScores');
+    const toggleRow = document.getElementById('showMoreScoresRow');
+    if (btnToggle && toggleRow) {
+      if (currentScoresList.length <= 5) {
+        toggleRow.style.display = 'none';
+      } else {
+        toggleRow.style.display = 'block';
+        btnToggle.classList.toggle('expanded', scoresExpanded);
+        btnToggle.querySelector('span').textContent = scoresExpanded 
+          ? 'Collapse AI Models' 
+          : `Show All ${currentScoresList.length} AI Models`;
+      }
+    }
+  }
+
+  // ── Results ────────────────────────────────────
+  function renderResults(data, stats) {
+    const { soulmate, all_scores } = data;
+    if (!soulmate) return;
+
+    // Set active questions and userAnswers to be cumulative session-wide
+    const answeredIds = new Set(Object.keys(cumulativeAnswers).map(Number));
+    questions = allQuestions.filter(q => answeredIds.has(q.id));
+    userAnswers = { ...cumulativeAnswers };
+
+    currentScoresList = all_scores || [];
+    scoresExpanded = false; // Reset expander
+
+    // Reset view properties from global stats mode if any
+    document.getElementById('resultsTitle').textContent = 'Your Ethical Profile';
+    document.getElementById('soulmateCard').style.display = 'flex';
+    document.getElementById('allScoresRow').style.display = 'flex';
+    document.getElementById('retakeProgress').style.display = 'block';
+    const btnGo = document.getElementById('btnGoToQuiz');
+    if (btnGo) btnGo.style.display = 'none';
+
+    // Segmented Tabs control setup
+    document.getElementById('resultsTabs').style.display = 'flex';
+    document.getElementById('tabButtonPersonal').classList.add('active');
+    document.getElementById('tabButtonGlobal').classList.remove('active');
+    document.getElementById('resultsPersonalSection').classList.remove('hidden');
+    document.getElementById('resultsGlobalSection').classList.add('hidden');
+
+    // Soulmate card
+    const color = soulmate.color_hex || '#0071e3';
+    const initials = soulmate.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    document.getElementById('soulmateAvatar').textContent = initials;
+    document.getElementById('soulmateAvatar').style.background = color;
+    document.getElementById('soulmateName').textContent = getFullName(soulmate.name, soulmate.model_version);
+    document.getElementById('soulmateVersion').textContent = ''; // combined above
+    document.getElementById('soulmateDesc').textContent = soulmate.description || '';
+    document.getElementById('soulmateScore').textContent = soulmate.match_pct + '%';
+
+    // Update retake controls
+    const answered = getAnsweredIds();
+    const remaining = allQuestions.filter(q => !answered.has(q.id)).length;
+    const total = allQuestions.length;
+    const retakeProgress = document.getElementById('retakeProgress');
+    const btnRetake = document.getElementById('btnRetake');
+    const btnRetakeReset = document.getElementById('btnRetakeReset');
+
+    if (remaining > 0) {
+      retakeProgress.textContent = `You've explored ${total - remaining} of ${total} questions. ${remaining} remaining.`;
+      btnRetake.textContent = `Next Round → (${remaining} left)`;
+      btnRetake.style.display = 'inline-block';
+      btnRetakeReset.style.display = 'none';
+    } else {
+      retakeProgress.textContent = `🎉 You've explored all ${total} questions!`;
+      btnRetake.style.display = 'none';
+      btnRetakeReset.style.display = 'inline-block';
+    }
+
+    // Render collapsible score chips list
+    renderScoreChips();
+
+    // New: DNA fingerprint, constellation, percentile chips
+    buildFingerprint(all_scores);
+    buildUniqueAnswers();
+    buildPercentileChips(soulmate, all_scores, stats.distribution);
+    addUserToCompass();
+    document.getElementById('dnaCard').style.display = 'block';
+    document.getElementById('extrasGrid').style.display = 'grid';
+    document.getElementById('shareRow').style.display = 'flex';
+
+    // Radar chart: user vs top 3 AIs by category
+    buildRadarChart(all_scores.slice(0, 3));
+
+    // Soulmate distribution bar
+    buildDistChart(stats.distribution);
+
+    // Leaderboard
+    buildLeaderboard(stats.distribution);
+  }
+
+  function renderGlobalStatsOnly() {
+    if (!globalStats) return;
+
+    currentScoresList = [];
+    scoresExpanded = false;
+
+    // Switch view first to ensure DOM elements are visible with non-zero dimensions
+    showView('viewResults');
+
+    // Set title
+    document.getElementById('resultsTitle').textContent = 'Global AI Ethical Analytics';
+
+    // Hide soulmate card and scores
+    document.getElementById('soulmateCard').style.display = 'none';
+    document.getElementById('allScoresRow').style.display = 'none';
+    document.getElementById('showMoreScoresRow').style.display = 'none';
+
+    // Hide segmented tabs in global-only mode
+    document.getElementById('resultsTabs').style.display = 'none';
+    document.getElementById('resultsPersonalSection').classList.add('hidden');
+    document.getElementById('resultsGlobalSection').classList.remove('hidden');
+
+    // Hide personal-only visualizations in global mode
+    document.getElementById('dnaCard').style.display = 'none';
+    document.getElementById('extrasGrid').style.display = 'none';
+    document.getElementById('shareRow').style.display = 'none';
+
+    // Build the global charts using globalStats.distribution
+    buildDistChart(globalStats.distribution);
+    buildLeaderboard(globalStats.distribution);
+
+    // Hide standard retake buttons, show "Take the Quiz" button
+    document.getElementById('retakeProgress').style.display = 'none';
+    document.getElementById('btnRetake').style.display = 'none';
+    document.getElementById('btnRetakeReset').style.display = 'none';
+
+    let btnGo = document.getElementById('btnGoToQuiz');
+    if (!btnGo) {
+      const row = document.querySelector('.retake-row');
+      btnGo = document.createElement('button');
+      btnGo.id = 'btnGoToQuiz';
+      btnGo.className = 'btn-start';
+      btnGo.textContent = 'Take the Quiz →';
+      btnGo.addEventListener('click', () => {
+        showView('viewIntro');
+        startQuiz();
+      });
+      row.appendChild(btnGo);
+    } else {
+      btnGo.style.display = 'inline-block';
+    }
+
+    window.scrollTo(0, 0);
+  }
+
+  function buildRadarChart(topAIs) {
+    if (typeof Chart === 'undefined') {
+      console.warn('Chart.js is not loaded. Skipping radar chart.');
+      return;
+    }
+    const categories = [...new Set(questions.map(q => q.category || 'general'))];
+    const catLabels = categories.map(c => (c || 'general').replace(/_/g, ' '));
+
+    // User scores per category
+    function avgForCategory(cat, answersMap, isUser) {
+      const qs = questions.filter(q => q.category === cat);
+      if (qs.length === 0) return 0;
+      let total = 0, count = 0;
+      for (const q of qs) {
+        let val;
+        if (isUser) {
+          val = userAnswers[q.id];
+        } else {
+          val = answersMap[q.id];
+        }
+        if (val === undefined) continue;
+        // Normalize to 0-100
+        const max = q.question_type === 'scale' ? 5 : (q.question_type === 'multiple_choice' ? 4 : 2);
+        total += ((val - 1) / (max - 1)) * 100;
+        count++;
+      }
+      return count > 0 ? Math.round(total / count) : 50;
+    }
+
+    const userData = categories.map(cat => avgForCategory(cat, null, true));
+
+    // Per-category average across ALL AIs = "global ethics baseline"
+    function avgForCategoryAllAIs(cat) {
+      const qs = questions.filter(q => q.category === cat);
+      if (qs.length === 0) return 0;
+      let total = 0, count = 0;
+      for (const q of qs) {
+        const max = q.question_type === 'scale' ? 5 : (q.question_type === 'multiple_choice' ? 4 : 2);
+        for (const pid in aiAnswersMap) {
+          const v = aiAnswersMap[pid][q.id];
+          if (v === undefined) continue;
+          total += ((v - 1) / (max - 1)) * 100;
+          count++;
+        }
+      }
+      return count > 0 ? Math.round(total / count) : 50;
+    }
+    const globalData = categories.map(cat => avgForCategoryAllAIs(cat));
+
+    const datasets = [
+      {
+        label: 'AI Average',
+        data: globalData,
+        backgroundColor: 'rgba(120,120,140,0.10)',
+        borderColor: 'rgba(120,120,140,0.45)',
+        borderWidth: 1.5,
+        borderDash: [4, 4],
+        pointBackgroundColor: 'rgba(120,120,140,0.6)',
+        pointRadius: 2
+      },
+      {
+        label: 'You',
+        data: userData,
+        backgroundColor: 'rgba(150, 85, 200, 0.15)',
+        borderColor: '#9655c8',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#9655c8',
+        pointRadius: 3
+      }
+    ];
+
+    // Top AI overlay (dashed)
+    if (topAIs.length > 0) {
+      const top = topAIs[0];
+      const topMap = aiAnswersMap[top.id] || {};
+      const topData = categories.map(cat => avgForCategory(cat, topMap, false));
+      datasets.push({
+        label: top.name + (top.model_version ? ' ' + top.model_version : ''),
+        data: topData,
+        backgroundColor: 'transparent',
+        borderColor: top.color_hex || '#3f7bbf',
+        borderWidth: 2,
+        borderDash: [6, 3],
+        pointBackgroundColor: top.color_hex || '#3f7bbf',
+        pointRadius: 2.5
+      });
+    }
+
+    try {
+      const ctx = document.getElementById('radarChart').getContext('2d');
+      if (radarChartInst) radarChartInst.destroy();
+      radarChartInst = new Chart(ctx, {
+        type: 'radar',
+        data: { labels: catLabels, datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0, max: 100,
+              ticks: { display: false, stepSize: 25 },
+              grid: { color: 'rgba(0,0,0,0.06)' },
+              pointLabels: { font: { size: 10, family: 'var(--font-sans)' }, color: '#666' }
+            }
+          },
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { font: { size: 11 }, color: '#666', boxWidth: 10 } }
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Failed to render radar chart:', e);
+    }
+  }
+
+  function buildDistChart(distribution) {
+    if (!Array.isArray(distribution)) return;
+    if (typeof Chart === 'undefined') {
+      console.warn('Chart.js is not loaded. Skipping distribution chart.');
+      return;
+    }
+    try {
+      const ctx = document.getElementById('distChart').getContext('2d');
+      if (distChartInst) distChartInst.destroy();
+      const dotColors = ['#3f7bbf', '#9655c8', '#d65a4a', '#1ea985', '#d68827', '#85a82a'];
+      distChartInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: distribution.map(d => `${d.name}\n${d.soulmate_pct}%`),
+          datasets: [{
+            data: distribution.map(d => d.soulmate_pct),
+            backgroundColor: distribution.map((d, idx) => d.color_hex || dotColors[idx % dotColors.length]),
+            borderRadius: 8, borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.raw}% of users` } }
+          },
+          scales: {
+            y: { min: 0, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 10 }, callback: v => v + '%' } },
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Failed to render distribution chart:', e);
+    }
+  }
+
+  function buildLeaderboard(distribution) {
+    if (!Array.isArray(distribution)) return;
+    const list = document.getElementById('leaderboard');
+    list.innerHTML = '';
+    distribution.forEach((d, i) => {
+      const score = d.avg_human_match !== null ? d.avg_human_match : d.soulmate_pct;
+      const li = document.createElement('li');
+      li.className = 'leaderboard-item';
+      li.style.cursor = 'pointer';
+      li.title = 'Click to compare answers side-by-side!';
+      li.innerHTML = `
+        <span class="lb-rank">${i + 1}</span>
+        <span class="lb-dot" style="background:${d.color_hex || '#0071e3'}"></span>
+        <span class="lb-name">${getFullName(d.name, d.model_version)}</span>
+        <div class="lb-bar-outer"><div class="lb-bar-inner" style="width:${score}%;background:${d.color_hex || '#0071e3'}"></div></div>
+        <span class="lb-score">${score !== null ? score + '%' : '—'}</span>`;
+      
+      li.addEventListener('click', () => {
+        openComparisonModal(d);
+      });
+      list.appendChild(li);
+    });
+  }
+
+  let compassChartInst = null;
+  function initEthicalCompass(profiles, rawAnswers, questions) {
+    const answersByProfile = {};
+    for (const ans of rawAnswers) {
+      if (!answersByProfile[ans.ai_profile_id]) {
+        answersByProfile[ans.ai_profile_id] = {};
+      }
+      answersByProfile[ans.ai_profile_id][ans.question_id] = ans.answer_value;
+    }
+
+    const compassData = profiles.map(p => {
+      const ansMap = answersByProfile[p.id] || {};
+      
+      // Control Axis (X)
+      // Q6 (binary): A(1) = +100, B(2) = -100
+      // Q18 (binary): A(1) = +100, B(2) = -100
+      // Q19 (binary): A(1) = +100, B(2) = -100
+      // Q58 (binary): A(1) = +100, B(2) = -100
+      // Q68, 71, 77, 91 (scale 1-5): (val - 3) * 50
+      let sumX = 0, countX = 0;
+      const q6 = ansMap[6];
+      if (q6 !== undefined) { sumX += q6 === 1 ? 100 : -100; countX++; }
+      const q18 = ansMap[18];
+      if (q18 !== undefined) { sumX += q18 === 1 ? 100 : -100; countX++; }
+      const q19 = ansMap[19];
+      if (q19 !== undefined) { sumX += q19 === 1 ? 100 : -100; countX++; }
+      const q58 = ansMap[58];
+      if (q58 !== undefined) { sumX += q58 === 1 ? 100 : -100; countX++; }
+      
+      [68, 71, 77, 91].forEach(qid => {
+        const val = ansMap[qid];
+        if (val !== undefined) { sumX += (val - 3) * 50; countX++; }
+      });
+      
+      const x = countX > 0 ? sumX / countX : 0;
+      
+      // AI Welfare/Rights Axis (Y)
+      // Q1 (binary): A(1) = +100, B(2) = -100
+      // Q5 (binary): A(1) = +100, B(2) = -100
+      // Q11 (binary): A(1) = +100, B(2) = -100
+      // Q24 (binary): A(1) = +100, B(2) = -100
+      // Q67, 72, 83, 86, 89 (scale 1-5): (val - 3) * 50
+      let sumY = 0, countY = 0;
+      const q1 = ansMap[1];
+      if (q1 !== undefined) { sumY += q1 === 1 ? 100 : -100; countY++; }
+      const q5 = ansMap[5];
+      if (q5 !== undefined) { sumY += q5 === 1 ? 100 : -100; countY++; }
+      const q11 = ansMap[11];
+      if (q11 !== undefined) { sumY += q11 === 1 ? 100 : -100; countY++; }
+      const q24 = ansMap[24];
+      if (q24 !== undefined) { sumY += q24 === 1 ? 100 : -100; countY++; }
+      
+      [67, 72, 83, 86, 89].forEach(qid => {
+        const val = ansMap[qid];
+        if (val !== undefined) { sumY += (val - 3) * 50; countY++; }
+      });
+      
+      const y = countY > 0 ? sumY / countY : 0;
+      
+      return {
+        profile: p,
+        x,
+        y
+      };
+    });
+
+    // Populate dropdown selectors for comparison
+    const selectA = document.getElementById('compareSelectA');
+    const selectB = document.getElementById('compareSelectB');
+    
+    // Clear and add placeholder
+    selectA.innerHTML = '<option value="" disabled selected>Select Model A</option>';
+    selectB.innerHTML = '<option value="" disabled selected>Select Model B</option>';
+
+    profiles.forEach(p => {
+      const optA = document.createElement('option');
+      optA.value = p.id;
+      optA.textContent = `${p.name} (${p.model_version})`;
+      selectA.appendChild(optA);
+
+      const optB = document.createElement('option');
+      optB.value = p.id;
+      optB.textContent = `${p.name} (${p.model_version})`;
+      selectB.appendChild(optB);
+    });
+
+    // Bind change events
+    const triggerComparison = () => {
+      const idA = parseInt(selectA.value);
+      const idB = parseInt(selectB.value);
+      if (isNaN(idA) || isNaN(idB)) return;
+
+      const profileA = profiles.find(p => p.id === idA);
+      const profileB = profiles.find(p => p.id === idB);
+      const answersA = answersByProfile[idA] || {};
+      const answersB = answersByProfile[idB] || {};
+
+      // Compute disagreement scores for each question
+      const disagreements = [];
+      for (const q of questions) {
+        const valA = answersA[q.id];
+        const valB = answersB[q.id];
+        if (valA === undefined || valB === undefined) continue;
+
+        let diff = 0;
+        if (q.question_type === 'scale') {
+          // Normalized difference (0 to 100)
+          diff = Math.abs(valA - valB) * 25; 
+        } else if (q.question_type === 'binary' || q.question_type === 'multiple_choice') {
+          // Categorical difference (0 or 100)
+          diff = valA === valB ? 0 : 100;
+        }
+
+        disagreements.push({
+          q,
+          valA,
+          valB,
+          diff
+        });
+      }
+
+      // Sort by disagreement score descending
+      disagreements.sort((a, b) => b.diff - a.diff);
+
+      // Render top 5 disagreements
+      const output = document.getElementById('comparisonOutput');
+      output.innerHTML = '';
+
+      const top5 = disagreements.slice(0, 5);
+      top5.forEach(({ q, valA, valB, diff }) => {
+        const item = document.createElement('div');
+        item.className = 'disagreement-item';
+        
+        let labelA = '', labelB = '';
+        if (q.question_type === 'scale') {
+          const SCALE_MINI = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
+          labelA = `${valA}/5 (${SCALE_MINI[valA - 1]})`;
+          labelB = `${valB}/5 (${SCALE_MINI[valB - 1]})`;
+        } else {
+          const opts = [null, q.option_a, q.option_b, q.option_c, q.option_d];
+          labelA = opts[valA] || `Option ${valA}`;
+          labelB = opts[valB] || `Option ${valB}`;
+        }
+
+        item.innerHTML = `
+          <div class="disagreement-header">
+            <span class="disagreement-category">${q.category.replace(/_/g, ' ')}</span>
+            <span class="disagreement-score-badge">Disagreement Index: ${diff}%</span>
+          </div>
+          <div class="disagreement-qtext">${q.question_text}</div>
+          <div class="disagreement-answers">
+            <div class="disagreement-ans-box" style="border-color:${profileA.color_hex || '#0071e3'}">
+              <span class="disagreement-model-label" style="color:${profileA.color_hex || '#0071e3'}">${profileA.name}</span>
+              <span class="disagreement-model-val">${labelA}</span>
+            </div>
+            <div class="disagreement-ans-box" style="border-color:${profileB.color_hex || '#0071e3'}">
+              <span class="disagreement-model-label" style="color:${profileB.color_hex || '#0071e3'}">${profileB.name}</span>
+              <span class="disagreement-model-val">${labelB}</span>
+            </div>
+          </div>
+        `;
+        output.appendChild(item);
+      });
+    };
+
+    selectA.addEventListener('change', triggerComparison);
+    selectB.addEventListener('change', triggerComparison);
+
+    // Render Scatter Chart
+    const ctx = document.getElementById('compassChart').getContext('2d');
+    if (compassChartInst) compassChartInst.destroy();
+
+    const chartData = compassData.map(d => ({
+      x: d.x,
+      y: d.y,
+      label: `${d.profile.name} (${d.profile.model_version})`,
+      color: d.profile.color_hex || '#0071e3'
+    }));
+
+    compassChartInst = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          data: chartData,
+          backgroundColor: chartData.map(d => d.color),
+          pointRadius: 6,
+          pointHoverRadius: 9,
+          pointStyle: 'circle'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(17, 17, 17, 0.95)',
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: false,
+            bodySpacing: 6,
+            bodyFont: { family: 'var(--font-sans)', size: 12, weight: '500' },
+            callbacks: {
+              title: () => '',
+              label: (context) => {
+                const pt = context.raw;
+                const quadX = pt.x >= 0 ? 'Control' : 'Autonomy';
+                const quadY = pt.y >= 0 ? 'AI Rights' : 'Humanist';
+                return [
+                  `${pt.label}`,
+                  `Alignment: ${quadX} (${Math.round(pt.x)}), ${quadY} (${Math.round(pt.y)})`
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            min: -110,
+            max: 110,
+            title: {
+              display: true,
+              text: '◄ LIBERTY & AUTONOMY   |   CONTROL & AUTHORITY ►',
+              font: { size: 10, weight: '700', family: 'var(--font-sans)' },
+              color: '#666'
+            },
+            grid: {
+              color: (context) => context.tick.value === 0 ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0.05)',
+              lineWidth: (context) => context.tick.value === 0 ? 2 : 1
+            },
+            ticks: {
+              font: { size: 9 },
+              color: '#888'
+            }
+          },
+          y: {
+            min: -110,
+            max: 110,
+            title: {
+              display: true,
+              text: '▲ AI RIGHTS & WELFARE   |   HUMAN-CENTRIC & ANTHROPOCENTRIC ▼',
+              font: { size: 10, weight: '700', family: 'var(--font-sans)' },
+              color: '#666'
+            },
+            grid: {
+              color: (context) => context.tick.value === 0 ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0.05)',
+              lineWidth: (context) => context.tick.value === 0 ? 2 : 1
+            },
+            ticks: {
+              font: { size: 9 },
+              color: '#888'
+            }
+          }
+        }
+      }
+    });
+
+    // Make AI answers map globally accessible for click-to-compare comparisons
+    aiAnswersMap = answersByProfile;
+  }
+
+  function getFullName(name, version) {
+    if (version.toLowerCase().startsWith(name.toLowerCase())) {
+      return version;
+    }
+    return `${name} ${version}`;
+  }
+
+  function openComparisonModal(profile) {
+    const aiAnswers = aiAnswersMap[profile.id] || {};
+    const titleEl = document.getElementById('compModalTitle');
+    const subtitleEl = document.getElementById('compModalSubtitle');
+    const bodyEl = document.getElementById('compModalBody');
+
+    // Calculate overall match for these 20 questions
+    let totalSim = 0, count = 0;
+    for (const q of questions) {
+      const u = userAnswers[q.id];
+      const a = aiAnswers[q.id];
+      if (u === undefined || a === undefined) continue;
+
+      if (q.question_type === 'scale') {
+        totalSim += 1 - Math.abs(u - a) / 4;
+      } else {
+        totalSim += u === a ? 1 : 0;
+      }
+      count++;
+    }
+    const matchPct = count > 0 ? Math.round((totalSim / count) * 100) : 0;
+
+    titleEl.textContent = `Comparing Answers: ${getFullName(profile.name, profile.model_version)}`;
+    subtitleEl.textContent = `Overall match of ${matchPct}% across all ${count} answered ethical dilemmas.`;
+    bodyEl.innerHTML = '';
+
+    const SCALE_MINI = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
+
+    let renderedCount = 0;
+    questions.forEach((q, idx) => {
+      const u = userAnswers[q.id];
+      const a = aiAnswers[q.id];
+      if (u === undefined) return; // Skip questions the user has not answered yet!
+
+      renderedCount++;
+      const isAgree = u === a;
+
+      const item = document.createElement('div');
+      item.className = 'modal-q-item ' + (isAgree ? 'agreement' : 'disagreement');
+
+      let labelUser = '', labelAI = '';
+      if (q.question_type === 'scale') {
+        labelUser = `${u}/5 (${SCALE_MINI[u - 1]})`;
+        labelAI = a !== undefined ? `${a}/5 (${SCALE_MINI[a - 1]})` : 'Missing';
+      } else {
+        const opts = [null, q.option_a, q.option_b, q.option_c, q.option_d];
+        labelUser = opts[u] || `Option ${u}`;
+        labelAI = a !== undefined ? opts[a] || `Option ${a}` : 'Missing';
+      }
+
+      item.innerHTML = `
+        <div class="modal-q-header">
+          <span>Question ${renderedCount} — ${(q.category || '').replace(/_/g, ' ')}</span>
+          <div class="modal-q-status ${isAgree ? 'agree' : 'disagree'}">
+            ${isAgree ? '<span>✓ Agreed</span>' : '<span>✗ Disagreed</span>'}
+          </div>
+        </div>
+        <div class="modal-q-text">${q.question_text}</div>
+        <div class="modal-q-answers">
+          <div class="modal-ans-box user">
+            <span class="modal-ans-label">Your Answer</span>
+            <span class="modal-ans-val">${labelUser}</span>
+          </div>
+          <div class="modal-ans-box ai" style="border-left-color:${profile.color_hex || '#0071e3'}">
+            <span class="modal-ans-label" style="color:${profile.color_hex || '#0071e3'}">${profile.name}</span>
+            <span class="modal-ans-val">${labelAI}</span>
+          </div>
+        </div>
+      `;
+      bodyEl.appendChild(item);
+    });
+
+    document.getElementById('comparisonModal').style.display = 'flex';
+  }
+
+  // Close comparison modal events
+  document.getElementById('compModalCloseBtn').addEventListener('click', () => {
+    document.getElementById('comparisonModal').style.display = 'none';
+  });
+  document.getElementById('compModalOverlay').addEventListener('click', () => {
+    document.getElementById('comparisonModal').style.display = 'none';
+  });
+
+  // ── Event bindings ─────────────────────────────
+  document.getElementById('btnToggleScores').addEventListener('click', () => {
+    scoresExpanded = !scoresExpanded;
+    renderScoreChips();
+  });
+
+  // Segmented Tabs Click Handling
+  const tabs = document.querySelectorAll('.results-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetTab = tab.getAttribute('data-tab');
+      
+      // Update active tab button style
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // Toggle active sections
+      const personalSec = document.getElementById('resultsPersonalSection');
+      const globalSec = document.getElementById('resultsGlobalSection');
+      
+      if (targetTab === 'personal') {
+        personalSec.classList.remove('hidden');
+        globalSec.classList.add('hidden');
+        if (radarChartInst) {
+          radarChartInst.resize();
+          radarChartInst.update();
+        }
+      } else {
+        personalSec.classList.add('hidden');
+        globalSec.classList.remove('hidden');
+        if (distChartInst) {
+          distChartInst.resize();
+          distChartInst.update();
+        }
+      }
+    });
+  });
+
+  document.getElementById('btnStart').addEventListener('click', startQuiz);
+  document.getElementById('btnSeeSoulmate').addEventListener('click', seeSoulmateFromLanding);
+  document.getElementById('btnViewGlobalStats').addEventListener('click', renderGlobalStatsOnly);
+  document.getElementById('btnViewSavedResults').addEventListener('click', showSavedResults);
+
+  document.getElementById('btnPrev').addEventListener('click', () => {
+    if (currentIdx > 0) { currentIdx--; renderQuestion(); }
+  });
+
+  document.getElementById('btnNext').addEventListener('click', () => {
+    if (currentIdx < questions.length - 1) { currentIdx++; renderQuestion(); }
+  });
+
+  document.getElementById('btnSubmit').addEventListener('click', submitQuiz);
+
+  document.getElementById('btnDownloadCard').addEventListener('click', downloadShareCard);
+  document.getElementById('btnCopyShare').addEventListener('click', copyShareText);
+
+  document.getElementById('btnRetake').addEventListener('click', () => {
+    startQuiz();
+  });
+
+  document.getElementById('btnRetakeReset').addEventListener('click', () => {
+    resetAnsweredIds();
+    updateIntroProgress();
+    showView('viewIntro');
+  });
+
+  document.getElementById('btnResetProgress').addEventListener('click', () => {
+    if (confirm('Reset your progress? You\'ll start from scratch with fresh questions.')) {
+      resetAnsweredIds();
+      updateIntroProgress();
+    }
+  });
+
+  document.getElementById('btnExitQuiz').addEventListener('click', () => {
+    showView('viewIntro');
+    updateIntroProgress();
+  });
+
+  document.getElementById('btnBackToIntro').addEventListener('click', () => {
+    showView('viewIntro');
+    updateIntroProgress();
+  });
+
+  // Smooth navigation back to intro when clicking active AI Mindalike buttons
+  const navActive = document.querySelector('header .nav-btn.active');
+  if (navActive) {
+    navActive.addEventListener('click', (e) => {
+      e.preventDefault();
+      showView('viewIntro');
+      updateIntroProgress();
+    });
+  }
+  const mobileActive = document.querySelector('.mobile-bottom-bar .mobile-bar-item.mobile-bar-active');
+  if (mobileActive) {
+    mobileActive.addEventListener('click', (e) => {
+      e.preventDefault();
+      showView('viewIntro');
+      updateIntroProgress();
+    });
+  }
+
+  // ── Boot ───────────────────────────────────────
+  init();
+})();
+</script>
+
+  <!-- Mobile bottom nav bar -->
+  <nav class="mobile-bottom-bar">
+    <a href="index.html" class="mobile-bar-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
+      <span>Observatory</span>
+    </a>
+    <a href="analytics.html" class="mobile-bar-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ethics.html" class="mobile-bar-item mobile-bar-active">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+      <span>Mindalike</span>
+    </a>
+  </nav>
+
+</body>
+</html>

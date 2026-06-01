@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics & Insights | AI Incident Observatory</title>
+  
+  <!-- CDNs for Chart.js and GSAP -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/assets/style.css?v=4">
+  <style>
+    :root {
+      --font-display: "Outfit", var(--font-sans);
+      --card-bg: rgba(255, 255, 255, 0.7);
+      --card-border: rgba(0, 0, 0, 0.05);
+      --glow: rgba(0, 71, 227, 0.05);
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: #f5f5f7;
+      overflow-y: auto;
+      padding-bottom: 60px;
+    }
+
+    .analytics-wrap {
+      max-width: 1400px;
+      margin: 100px auto 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Premium Page Title Section */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 32px;
+    }
+
+    .page-title h1 {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .page-title p {
+      font-size: 13px;
+      color: var(--gray-text);
+      margin-top: 4px;
+    }
+
+    /* Filters Section in Dashboard */
+    .dashboard-filters {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--glass);
+      border: 1px solid var(--gray-border);
+      padding: 8px 16px;
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+    }
+
+    .filter-select {
+      background: none;
+      border: none;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink);
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Summary Stats Grid */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .summary-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gray-border-dark);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity 300ms ease;
+    }
+
+    .summary-card:hover::before {
+      opacity: 1;
+    }
+
+    .summary-card.sev::before { background: #e74c3c; }
+    .summary-card.cat::before { background: #9655c8; }
+    .summary-card.dev::before { background: #1ea985; }
+
+    .summary-val {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .summary-lbl {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gray-text);
+    }
+
+    /* Charts Grid System */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 24px;
+    }
+
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      transition: all 350ms cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .chart-card:hover {
+      box-shadow: var(--shadow-hover);
+      border-color: var(--gray-border-dark);
+    }
+
+    .chart-card-header {
+      margin-bottom: 20px;
+    }
+
+    .chart-card-title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    .chart-card-subtitle {
+      font-size: 11px;
+      color: var(--gray-text);
+      margin-top: 2px;
+    }
+
+    .chart-canvas-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Col-span configurations for the layout grid */
+    .col-span-3 { grid-column: span 3; }
+    .col-span-2 { grid-column: span 2; }
+    .col-span-4 { grid-column: span 4; }
+    .col-span-6 { grid-column: span 6; }
+
+    /* Custom CSS Heatmap matrix grid styling */
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: 140px repeat(3, 1fr);
+      gap: 4px;
+      width: 100%;
+    }
+
+    .heatmap-header {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-text);
+      text-align: center;
+      padding: 6px 0;
+    }
+
+    .heatmap-row-label {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      padding-right: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .heatmap-cell {
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      min-height: 26px;
+      cursor: pointer;
+      transition: all 150ms ease;
+    }
+
+    .heatmap-cell:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      z-index: 2;
+    }
+
+    /* Proportional Treemap styling */
+    .treemap-box {
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .treemap-box:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      filter: brightness(1.04);
+    }
+
+    .treemap-box-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+
+    .treemap-box-val {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      align-self: flex-end;
+    }
+
+
+
+    /* Responsiveness adjustments */
+    @media (max-width: 1200px) {
+      .col-span-3, .col-span-2, .col-span-4 {
+        grid-column: span 6;
+      }
+      .summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .dashboard-filters {
+        width: 100%;
+        justify-content: space-between;
+      }
+    
+    /* Active Navbar Clicks Override */
+    .nav-btn.active, .mobile-bar-item.mobile-bar-active {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen overlay -->
+  <div id="dashboard-loader">
+    <div class="loading-inner">
+      <div class="loading-logo">
+        <span class="loading-logo-dot" style="--c:#3f7bbf"></span>
+        <span class="loading-logo-dot" style="--c:#9655c8"></span>
+        <span class="loading-logo-dot" style="--c:#d65a4a"></span>
+        <span class="loading-logo-dot" style="--c:#1ea985"></span>
+        <span class="loading-logo-dot" style="--c:#d68827"></span>
+        <span class="loading-logo-dot" style="--c:#85a82a"></span>
+      </div>
+      <div class="loading-title">AI Incident Observatory</div>
+      <div class="loading-msg">Analyzing telemetry database...</div>
+      <div class="loading-bar-track"><div class="loading-bar-fill" style="width: 100%;"></div></div>
+    </div>
+  </div>
+
+  <!-- Background grid pattern -->
+  <div class="grid-overlay"></div>
+
+  <!-- Header Branding and Return Back Link -->
+  <header>
+    <div class="brand">
+      <h1>AI Incident Observatory</h1>
+      <span class="sub" id="analyticsBadge">0 incidents parsed</span>
+    </div>
+    
+    <!-- Spacer to keep navigation controls on the right in 3-column grid -->
+    <div class="center-spacer"></div>
+
+    <div class="navigation-controls">
+      <a href="index.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
+        <span>Observatory</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
+      </a>
+
+      <a href="analytics.html" class="nav-btn nav-desktop-only active" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
+        <span>Analytics</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      </a>
+
+      <a href="ethics.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
+        <span>AI Mindalike</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Analytics Workspace wrapper -->
+  <div class="analytics-wrap">
+    
+    <!-- Title & Interactive Filter Header -->
+    <div class="page-header">
+      <div class="page-title">
+        <h1>Analytics & Insights</h1>
+        <p>Statistical summaries and deep analytical pivots of AI & ML system failures.</p>
+      </div>
+
+      <div class="dashboard-filters">
+        <span style="font-size: 9px; font-weight: 700; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.05em;">Region Filter:</span>
+        <select class="filter-select" id="geoSelect">
+          <option value="all">Global (All Regions)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Dynamic Metrics Cards Grid -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-val" id="metricTotal">—</div>
+        <div class="summary-lbl">Total Visible Failures</div>
+      </div>
+      <div class="summary-card sev">
+        <div class="summary-val" id="metricSeverity">—</div>
+        <div class="summary-lbl">Avg Severity Index</div>
+      </div>
+      <div class="summary-card cat">
+        <div class="summary-val" id="metricCategory" style="font-size: 14px; font-weight: 700; font-family: var(--font-sans); text-transform: uppercase; height: 35px; display: flex; align-items: flex-end;">—</div>
+        <div class="summary-lbl">Dominant Threat Vector</div>
+      </div>
+      <div class="summary-card dev">
+        <div class="summary-val" id="metricTarget" style="font-size: 14px; font-weight: 700; font-family: var(--font-sans); text-transform: uppercase; height: 35px; display: flex; align-items: flex-end;">—</div>
+        <div class="summary-lbl">Primary Crisis Target</div>
+      </div>
+    </div>
+
+    <!-- Charts Layout Grid (10 widgets total!) -->
+    <div class="charts-grid">
+      
+      <!-- Chart 1: Yearly Incidents Trend (Line + Area) -->
+      <div class="chart-card col-span-3">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Failures Over Time</h2>
+          <p class="chart-card-subtitle">Year-by-year ingestion trends and growth velocity</p>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartTimeTrend"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Failure Category Breakdown (Doughnut) -->
+      <div class="chart-card col-span-3">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Failure Class Distribution</h2>
+          <p class="chart-card-subtitle">Breakdown by AI threat vector and risk category</p>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartCategoryBreakdown"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 3: Top 10 Most Implicated Developers (Horizontal Bar) -->
+      <div class="chart-card col-span-4">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Top Implicated Entities</h2>
+          <p class="chart-card-subtitle">Incident volume of the ten most frequent developer companies</p>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartTopDevelopers"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 4: Registry Source Contributions (Polar Area) -->
+      <div class="chart-card col-span-2">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Data Ingestion Sources</h2>
+          <p class="chart-card-subtitle">Telemetry contributed by feed source registries</p>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartSourceContributions"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 5: Stacked Severity Profile (Stacked vertical Bar) -->
+      <div class="chart-card col-span-3">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Severity Composition Timeline</h2>
+          <p class="chart-card-subtitle">Evolution of risk levels (SEV 1 to SEV 3) year-over-year</p>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartSeverityComposition"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 6: Geographic Profile Radar (Radar) -->
+      <div class="chart-card col-span-3">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Geographic Threat Map</h2>
+          <p class="chart-card-subtitle">Visualizing incident reporting density profiles by region</p>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartGeographyRadar"></canvas>
+        </div>
+      </div>
+
+      <!-- NEW Advanced Chart 7: Developer Progression Timeline (Multi-Line Chart) -->
+      <div class="chart-card col-span-4">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Corporate Safety Progression</h2>
+          <p class="chart-card-subtitle">Tracing yearly incident frequencies of major organizations side-by-side</p>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartDeveloperProgression"></canvas>
+        </div>
+      </div>
+
+      <!-- NEW Advanced Chart 8: Category vs. Severity Heatmap (Custom shaded grid layout) -->
+      <div class="chart-card col-span-2">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Threat vs. Severity Matrix</h2>
+          <p class="chart-card-subtitle">Grid density instantly shows historic risk hotspots</p>
+        </div>
+        <div class="chart-canvas-wrap" style="align-items: stretch; justify-content: stretch; overflow-y: auto;">
+          <div id="heatmapContainer" style="width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 4px 0;"></div>
+        </div>
+      </div>
+
+      <!-- NEW Advanced Chart 9: Affected Groups Treemap (Interactive CSS/Flex Grid layout) -->
+      <div class="chart-card col-span-3">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Impacted Societal Cohorts</h2>
+          <p class="chart-card-subtitle">Proportional trellis illustrating which sectors and communities are targeted most</p>
+        </div>
+        <div class="chart-canvas-wrap" style="align-items: stretch; justify-content: stretch;">
+          <div id="treemapContainer" style="width: 100%; height: 100%; display: flex; gap: 8px;"></div>
+        </div>
+      </div>
+
+      <!-- NEW Advanced Chart 10: Threat Vector Co-occurrence Network (Canvas-rendered category network) -->
+      <div class="chart-card col-span-3">
+        <div class="chart-card-header">
+          <h2 class="chart-card-title">Threat Co-occurrence Network</h2>
+          <p class="chart-card-subtitle">Interactive node-link mapping showing tags commonly triggered in same incidents</p>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="canvasCooccurrence"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- JavaScript Telemetry Dashboard Controller -->
+  <script>
+    // =========================================================================
+    // Core Chart Configurations & Palette Definitions
+    // =========================================================================
+    const CATEGORIES = [
+      'Bias & Discrimination',
+      'Misinformation & Hallucination',
+      'Privacy & Surveillance',
+      'Physical Safety',
+      'Labor & Economy',
+      'Copyright & IP',
+      'Agentic Failures',
+      'Environmental',
+      'Criminal Justice',
+      'Healthcare',
+      'Financial',
+      'Manipulation & Autonomy'
+    ];
+
+    const CATEGORY_COLORS = {
+      'Bias & Discrimination': '#3f7bbf',
+      'Misinformation & Hallucination': '#9655c8',
+      'Privacy & Surveillance': '#1ea985',
+      'Physical Safety': '#d65a4a',
+      'Labor & Economy': '#d68827',
+      'Copyright & IP': '#85a82a',
+      'Agentic Failures': '#4d7099',
+      'Environmental': '#2e7d32',
+      'Criminal Justice': '#c0392b',
+      'Healthcare': '#00838f',
+      'Financial': '#ad1457',
+      'Manipulation & Autonomy': '#cf3f8e'
+    };
+
+    const SEV_COLORS = {
+      1: '#3498db', // SEV 1: Blue
+      2: '#f39c12', // SEV 2: Orange
+      3: '#e74c3c'  // SEV 3: Red
+    };
+
+    const CHART_FONTS = {
+      family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      size: 11
+    };
+
+    // Global application telemetry state
+    const telemetry = {
+      raw: [],
+      filtered: [],
+      regions: [],
+      charts: {},
+      cooccurrence: {
+        nodes: [],
+        edges: [],
+        hoveredNode: null,
+        animationFrame: null
+      }
+    };
+
+    const YEAR_MIN = 2012, YEAR_MAX = 2026;
+
+    // Bootstraps analytics page
+    async function bootstrap() {
+      // Clear old caches programmatically from client side to ensure freshness
+      if (window.caches) {
+        try {
+          const keys = await caches.keys();
+          for (const key of keys) {
+            if (!key.includes('aiobs-v4')) {
+              await caches.delete(key);
+              console.log('Purged stale cache:', key);
+            }
+          }
+        } catch (e) {
+          console.warn('Cache clearing failed:', e);
+        }
+      }
+
+      // Register/update service worker to keep caching behavior in sync
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js?v=4').then(reg => {
+          reg.update();
+        }).catch(e => console.warn('SW registration failed:', e));
+      }
+
+      try {
+        console.log('Fetching database telemetry...');
+        const res = await fetch('/api/incidents?limit=15000&lightweight=true');
+        if (!res.ok) throw new Error('API request failed');
+        
+        telemetry.raw = await res.json();
+        telemetry.filtered = [...telemetry.raw];
+        console.log(`Successfully ingested ${telemetry.raw.length} records.`);
+
+        // Extract unique regions for filter select
+        const regionSet = new Set();
+        telemetry.raw.forEach(inc => {
+          if (inc.geography) regionSet.add(inc.geography.trim());
+        });
+        
+        telemetry.regions = [...regionSet].sort();
+        populateFilterDropdown();
+
+        // Bind filter event
+        document.getElementById('geoSelect').addEventListener('change', handleFilterChange);
+
+        // Hide loader
+        const loader = document.getElementById('dashboard-loader');
+        loader.style.opacity = 0;
+        setTimeout(() => loader.style.display = 'none', 400);
+
+        // Setup the interactive network canvas listeners
+        setupCooccurrenceNetwork();
+
+        // Render initial dashboard data
+        updateDashboard();
+
+      } catch (err) {
+        console.error('Analytics load crash:', err.message);
+        document.getElementById('dashboard-loader').innerHTML = `
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #e74c3c; text-transform: uppercase;">Infrastructure Failure</div>
+          <div style="font-size: 11px; margin-top: 8px; color: var(--gray-text);">Failed to load telemetry database api.</div>
+        `;
+      }
+    }
+
+    function populateFilterDropdown() {
+      const select = document.getElementById('geoSelect');
+      telemetry.regions.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r;
+        opt.textContent = r;
+        select.appendChild(opt);
+      });
+    }
+
+    function handleFilterChange(e) {
+      const geo = e.target.value;
+      if (geo === 'all') {
+        telemetry.filtered = [...telemetry.raw];
+      } else {
+        telemetry.filtered = telemetry.raw.filter(i => i.geography === geo);
+      }
+      updateDashboard();
+    }
+
+    // Refresh all calculations and render/update Chart.js/HTML instances
+    function updateDashboard() {
+      // 1. Update top summary statistics
+      updateSummaryMetrics();
+
+      // 2. Perform aggregations and feed Chart.js
+      renderTimelineChart();
+      renderCategoryChart();
+      renderDeveloperChart();
+      renderSourceChart();
+      renderSeverityCompositionChart();
+      renderGeographyRadarChart();
+
+      // 3. Render new advanced visualization elements!
+      renderDeveloperProgressionChart();
+      renderCategorySeverityHeatmap();
+      renderAffectedGroupsTreemap();
+      recalculateCooccurrenceNetwork();
+    }
+
+    // =========================================================================
+    // Summarization and Data Pivot Calculations
+    // =========================================================================
+    
+    function updateSummaryMetrics() {
+      const data = telemetry.filtered;
+      document.getElementById('analyticsBadge').textContent = `${telemetry.raw.length} incidents parsed`;
+
+      // Visible incidents count
+      document.getElementById('metricTotal').textContent = data.length.toLocaleString();
+
+      if (data.length === 0) {
+        document.getElementById('metricSeverity').textContent = '0.00';
+        document.getElementById('metricCategory').textContent = '—';
+        document.getElementById('metricTarget').textContent = '—';
+        return;
+      }
+
+      // Average Severity Score
+      let sevSum = 0;
+      data.forEach(d => sevSum += d.severity);
+      const avgSev = sevSum / data.length;
+      document.getElementById('metricSeverity').textContent = avgSev.toFixed(2);
+
+      // Dominant Failure category
+      const catCounts = {};
+      data.forEach(d => {
+        catCounts[d.category] = (catCounts[d.category] || 0) + 1;
+      });
+      const topCat = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0];
+      document.getElementById('metricCategory').textContent = topCat ? topCat[0] : '—';
+
+      // Primary affected group
+      const targetCounts = {};
+      data.forEach(d => {
+        const grp = d.affected_group;
+        if (grp && grp !== 'General Public' && grp !== 'General') {
+          targetCounts[grp] = (targetCounts[grp] || 0) + 1;
+        }
+      });
+      const topTarget = Object.entries(targetCounts).sort((a, b) => b[1] - a[1])[0];
+      document.getElementById('metricTarget').textContent = topTarget ? topTarget[0] : 'General Public';
+    }
+
+    // Helper: extracts yearly counts
+    function aggregateByYear(data) {
+      const years = {};
+      for (let y = YEAR_MIN; y <= YEAR_MAX; y++) years[y] = 0;
+      data.forEach(d => {
+        if (years[d.year] !== undefined) years[d.year]++;
+      });
+      return years;
+    }
+
+    // Helper: get standard chart options to keep clean branding styling consistent
+    function getStandardOptions(title, displayLegend = false) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: displayLegend,
+            labels: {
+              font: CHART_FONTS,
+              color: '#333333',
+              boxWidth: 10
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17, 17, 17, 0.95)',
+            titleFont: { family: CHART_FONTS.family, weight: '600', size: 12 },
+            bodyFont: CHART_FONTS,
+            padding: 12,
+            cornerRadius: 8,
+            boxWidth: 8,
+            boxHeight: 8,
+            usePointStyle: true
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(0, 0, 0, 0.03)' },
+            ticks: { font: CHART_FONTS, color: '#86868b' }
+          },
+          y: {
+            grid: { color: 'rgba(0, 0, 0, 0.03)' },
+            ticks: { font: CHART_FONTS, color: '#86868b' }
+          }
+        }
+      };
+    }
+
+    // =========================================================================
+    // Chart Inits & Refreshers (Original 6)
+    // =========================================================================
+
+    // Chart 1: Yearly Incidents Trend (Line + Area)
+    function renderTimelineChart() {
+      const yearMap = aggregateByYear(telemetry.filtered);
+      const labels = Object.keys(yearMap);
+      const values = Object.values(yearMap);
+
+      if (telemetry.charts.timeTrend) {
+        telemetry.charts.timeTrend.data.labels = labels;
+        telemetry.charts.timeTrend.data.datasets[0].data = values;
+        telemetry.charts.timeTrend.update();
+        return;
+      }
+
+      const ctx = document.getElementById('chartTimeTrend').getContext('2d');
+      const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+      gradient.addColorStop(0, 'rgba(0, 113, 227, 0.35)');
+      gradient.addColorStop(1, 'rgba(0, 113, 227, 0.00)');
+
+      telemetry.charts.timeTrend = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Incidents Ingested',
+            data: values,
+            borderColor: '#0071e3',
+            borderWidth: 2.5,
+            fill: true,
+            backgroundColor: gradient,
+            tension: 0.35,
+            pointBackgroundColor: '#0071e3',
+            pointHoverRadius: 6,
+            pointHoverBorderWidth: 2,
+            pointHoverBorderColor: '#ffffff'
+          }]
+        },
+        options: getStandardOptions('Yearly Trend')
+      });
+    }
+
+    // Chart 2: Failure Category Breakdown (Doughnut)
+    function renderCategoryChart() {
+      const catMap = {};
+      telemetry.filtered.forEach(d => {
+        catMap[d.category] = (catMap[d.category] || 0) + 1;
+      });
+
+      const sortedCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+      const labels = sortedCats.map(e => e[0]);
+      const values = sortedCats.map(e => e[1]);
+      const backgroundColors = labels.map(l => CATEGORY_COLORS[l] || '#777788');
+
+      if (telemetry.charts.catBreakdown) {
+        telemetry.charts.catBreakdown.data.labels = labels;
+        telemetry.charts.catBreakdown.data.datasets[0].data = values;
+        telemetry.charts.catBreakdown.data.datasets[0].backgroundColor = backgroundColors;
+        telemetry.charts.catBreakdown.update();
+        return;
+      }
+
+      const ctx = document.getElementById('chartCategoryBreakdown').getContext('2d');
+      telemetry.charts.catBreakdown = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: backgroundColors,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverOffset: 12
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
+          plugins: {
+            legend: {
+              display: true,
+              position: 'right',
+              labels: {
+                font: { family: CHART_FONTS.family, size: 9 },
+                color: '#333333',
+                boxWidth: 8,
+                padding: 8
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(17, 17, 17, 0.95)',
+              bodyFont: CHART_FONTS,
+              padding: 10,
+              cornerRadius: 8
+            }
+          }
+        }
+      });
+    }
+
+    // Chart 3: Top 10 Most Implicated Developers (Horizontal Bar)
+    function renderDeveloperChart() {
+      const devMap = {};
+      telemetry.filtered.forEach(d => {
+        const name = d.developer || 'Unknown Developer';
+        devMap[name] = (devMap[name] || 0) + 1;
+      });
+
+      const sortedDevs = Object.entries(devMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      const labels = sortedDevs.map(e => e[0]);
+      const values = sortedDevs.map(e => e[1]);
+
+      const backgroundColors = labels.map(lbl => {
+        if (lbl.includes('Google')) return '#e74c3c';
+        if (lbl.includes('OpenAI')) return '#10a37f';
+        if (lbl.includes('Microsoft')) return '#00a2ed';
+        if (lbl.includes('Meta')) return '#0081fb';
+        if (lbl.includes('Anthropic')) return '#cc7b5c';
+        return '#0071e3';
+      });
+
+      if (telemetry.charts.topDevs) {
+        telemetry.charts.topDevs.data.labels = labels;
+        telemetry.charts.topDevs.data.datasets[0].data = values;
+        telemetry.charts.topDevs.data.datasets[0].backgroundColor = backgroundColors;
+        telemetry.charts.topDevs.update();
+        return;
+      }
+
+      const ctx = document.getElementById('chartTopDevelopers').getContext('2d');
+      telemetry.charts.topDevs = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Visibilities',
+            data: values,
+            backgroundColor: backgroundColors,
+            borderRadius: 6,
+            barThickness: 16
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(17, 17, 17, 0.95)',
+              bodyFont: CHART_FONTS,
+              padding: 10,
+              cornerRadius: 8
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(0, 0, 0, 0.03)' },
+              ticks: { font: CHART_FONTS, color: '#86868b' }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { font: { family: CHART_FONTS.family, size: 10, weight: '500' }, color: '#333333' }
+            }
+          }
+        }
+      });
+    }
+
+    // Chart 4: Registry Source Contributions (Polar Area)
+    function renderSourceChart() {
+      const srcMap = {};
+      telemetry.filtered.forEach(d => {
+        srcMap[d.source] = (srcMap[d.source] || 0) + 1;
+      });
+
+      const labels = Object.keys(srcMap);
+      const values = Object.values(srcMap);
+      const bgColors = [
+        'rgba(0, 113, 227, 0.75)',
+        'rgba(150, 85, 200, 0.75)',
+        'rgba(30, 169, 133, 0.75)',
+        'rgba(214, 90, 74, 0.75)',
+        'rgba(214, 136, 39, 0.75)',
+        'rgba(133, 168, 42, 0.75)'
+      ];
+
+      if (telemetry.charts.srcContributions) {
+        telemetry.charts.srcContributions.data.labels = labels;
+        telemetry.charts.srcContributions.data.datasets[0].data = values;
+        telemetry.charts.srcContributions.update();
+        return;
+      }
+
+      const ctx = document.getElementById('chartSourceContributions').getContext('2d');
+      telemetry.charts.srcContributions = new Chart(ctx, {
+        type: 'polarArea',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: bgColors,
+            borderColor: '#ffffff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                font: { family: CHART_FONTS.family, size: 9 },
+                color: '#333333',
+                boxWidth: 8,
+                padding: 4
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(17, 17, 17, 0.95)',
+              bodyFont: CHART_FONTS,
+              padding: 10,
+              cornerRadius: 8
+            }
+          },
+          scales: {
+            r: {
+              grid: { color: 'rgba(0, 0, 0, 0.04)' },
+              ticks: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // Chart 5: Stacked Severity Profile (Stacked vertical Bar)
+    function renderSeverityCompositionChart() {
+      const years = [];
+      for (let y = YEAR_MIN; y <= YEAR_MAX; y++) years.push(y);
+
+      const sev1Data = Array(years.length).fill(0);
+      const sev2Data = Array(years.length).fill(0);
+      const sev3Data = Array(years.length).fill(0);
+
+      telemetry.filtered.forEach(d => {
+        const yIdx = years.indexOf(d.year);
+        if (yIdx !== -1) {
+          if (d.severity === 3) sev3Data[yIdx]++;
+          else if (d.severity === 2) sev2Data[yIdx]++;
+          else if (d.severity === 1) sev1Data[yIdx]++;
+        }
+      });
+
+      if (telemetry.charts.sevComposition) {
+        telemetry.charts.sevComposition.data.datasets[0].data = sev1Data;
+        telemetry.charts.sevComposition.data.datasets[1].data = sev2Data;
+        telemetry.charts.sevComposition.data.datasets[2].data = sev3Data;
+        telemetry.charts.sevComposition.update();
+        return;
+      }
+
+      const ctx = document.getElementById('chartSeverityComposition').getContext('2d');
+      telemetry.charts.sevComposition = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: years,
+          datasets: [
+            { label: 'SEV 1 (Minor)', data: sev1Data, backgroundColor: SEV_COLORS[1], borderRadius: 4 },
+            { label: 'SEV 2 (Moderate)', data: sev2Data, backgroundColor: SEV_COLORS[2], borderRadius: 4 },
+            { label: 'SEV 3 (Critical)', data: sev3Data, backgroundColor: SEV_COLORS[3], borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                font: { family: CHART_FONTS.family, size: 9 },
+                color: '#333333',
+                boxWidth: 10,
+                padding: 10
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(17, 17, 17, 0.95)',
+              bodyFont: CHART_FONTS,
+              padding: 10,
+              cornerRadius: 8
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false },
+              ticks: { font: CHART_FONTS, color: '#86868b' }
+            },
+            y: {
+              stacked: true,
+              grid: { color: 'rgba(0, 0, 0, 0.03)' },
+              ticks: { font: CHART_FONTS, color: '#86868b' }
+            }
+          }
+        }
+      });
+    }
+
+    // Chart 6: Geographic Profile Radar (Radar Chart)
+    function renderGeographyRadarChart() {
+      const geoMap = {};
+      telemetry.filtered.forEach(d => {
+        if (d.geography) {
+          geoMap[d.geography] = (geoMap[d.geography] || 0) + 1;
+        }
+      });
+
+      const sortedGeos = Object.entries(geoMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
+      const labels = sortedGeos.map(e => e[0]);
+      const values = sortedGeos.map(e => e[1]);
+
+      if (telemetry.charts.geoRadar) {
+        telemetry.charts.geoRadar.data.labels = labels;
+        telemetry.charts.geoRadar.data.datasets[0].data = values;
+        telemetry.charts.geoRadar.update();
+        return;
+      }
+
+      const ctx = document.getElementById('chartGeographyRadar').getContext('2d');
+      telemetry.charts.geoRadar = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Incidents',
+            data: values,
+            borderColor: '#9655c8',
+            backgroundColor: 'rgba(150, 85, 200, 0.15)',
+            borderWidth: 2,
+            pointBackgroundColor: '#9655c8',
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(17, 17, 17, 0.95)',
+              bodyFont: CHART_FONTS,
+              padding: 10,
+              cornerRadius: 8
+            }
+          },
+          scales: {
+            r: {
+              grid: { color: 'rgba(0, 0, 0, 0.04)' },
+              angleLines: { color: 'rgba(0, 0, 0, 0.04)' },
+              pointLabels: {
+                font: { family: CHART_FONTS.family, size: 9, weight: '600' },
+                color: '#555555'
+              },
+              ticks: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // NEW Advanced Charts Implementations
+    // =========================================================================
+
+    // Advanced Chart 7: Developer Progression Timeline (Multi-Line Chart)
+    function renderDeveloperProgressionChart() {
+      const topDevs = ['Google', 'OpenAI', 'Microsoft', 'Meta', 'Anthropic'];
+      const years = [];
+      for (let y = YEAR_MIN; y <= YEAR_MAX; y++) years.push(y);
+
+      // Initialize dataset structures
+      const devSeries = {
+        'Google': Array(years.length).fill(0),
+        'OpenAI': Array(years.length).fill(0),
+        'Microsoft': Array(years.length).fill(0),
+        'Meta': Array(years.length).fill(0),
+        'Anthropic': Array(years.length).fill(0)
+      };
+
+      telemetry.filtered.forEach(d => {
+        const yIdx = years.indexOf(d.year);
+        if (yIdx !== -1 && d.developer) {
+          for (const devName of topDevs) {
+            if (d.developer.toLowerCase().includes(devName.toLowerCase())) {
+              devSeries[devName][yIdx]++;
+              break;
+            }
+          }
+        }
+      });
+
+      const devColors = {
+        'Google': '#e74c3c',
+        'OpenAI': '#10a37f',
+        'Microsoft': '#00a2ed',
+        'Meta': '#0081fb',
+        'Anthropic': '#cc7b5c'
+      };
+
+      const datasets = topDevs.map(dev => ({
+        label: dev,
+        data: devSeries[dev],
+        borderColor: devColors[dev],
+        backgroundColor: devColors[dev] + '11',
+        borderWidth: 2,
+        tension: 0.35,
+        fill: false,
+        pointHoverRadius: 6,
+        pointHoverBorderWidth: 2,
+        pointHoverBorderColor: '#ffffff'
+      }));
+
+      if (telemetry.charts.devProgression) {
+        telemetry.charts.devProgression.data.datasets = datasets;
+        telemetry.charts.devProgression.update();
+        return;
+      }
+
+      const ctx = document.getElementById('chartDeveloperProgression').getContext('2d');
+      telemetry.charts.devProgression = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: datasets
+        },
+        options: getStandardOptions('Corporate Safety Progression', true)
+      });
+    }
+
+    // Advanced Chart 8: Category vs. Severity Heatmap (Custom styled grid table layout)
+    function renderCategorySeverityHeatmap() {
+      const container = document.getElementById('heatmapContainer');
+      container.innerHTML = ''; // reset
+
+      // Initialize categories vs severity map
+      const matrix = {};
+      CATEGORIES.forEach(c => {
+        matrix[c] = { 1: 0, 2: 0, 3: 0 };
+      });
+
+      let maxCount = 1;
+      telemetry.filtered.forEach(d => {
+        if (matrix[d.category] && matrix[d.category][d.severity] !== undefined) {
+          matrix[d.category][d.severity]++;
+          if (matrix[d.category][d.severity] > maxCount) {
+            maxCount = matrix[d.category][d.severity];
+          }
+        }
+      });
+
+      // Build grid wrapper
+      const grid = document.createElement('div');
+      grid.className = 'heatmap-grid';
+
+      // 1. Header Row
+      grid.appendChild(document.createElement('div')); // empty top-left label space
+      [1, 2, 3].forEach(s => {
+        const header = document.createElement('div');
+        header.className = 'heatmap-header';
+        header.textContent = `SEV ${s}`;
+        grid.appendChild(header);
+      });
+
+      // 2. Rows
+      CATEGORIES.forEach(cat => {
+        // Label
+        const rowLabel = document.createElement('div');
+        rowLabel.className = 'heatmap-row-label';
+        rowLabel.textContent = cat;
+        rowLabel.title = cat;
+        grid.appendChild(rowLabel);
+
+        // Severity Cells
+        [1, 2, 3].forEach(s => {
+          const count = matrix[cat][s];
+          const cell = document.createElement('div');
+          cell.className = 'heatmap-cell';
+          cell.textContent = count > 0 ? count : '—';
+          
+          // Density shading proportional to count
+          const alpha = count / maxCount;
+          if (count > 0) {
+            cell.style.backgroundColor = `rgba(231, 76, 60, ${0.05 + 0.9 * alpha})`; // Red glow
+            cell.style.color = alpha > 0.6 ? '#ffffff' : 'var(--ink)';
+          } else {
+            cell.style.backgroundColor = 'rgba(0,0,0,0.015)';
+            cell.style.color = 'var(--gray-text)';
+            cell.style.opacity = 0.4;
+          }
+
+          cell.title = `${cat} · SEV ${s}: ${count} incidents`;
+          grid.appendChild(cell);
+        });
+      });
+
+      container.appendChild(grid);
+    }
+
+    // Advanced Chart 9: Affected Groups Treemap (Proportional nested Flexbox layout)
+    function renderAffectedGroupsTreemap() {
+      const container = document.getElementById('treemapContainer');
+      container.innerHTML = ''; // reset
+
+      const counts = {};
+      telemetry.filtered.forEach(d => {
+        const g = d.affected_group;
+        if (g && g !== 'General Public' && g !== 'General') {
+          counts[g] = (counts[g] || 0) + 1;
+        }
+      });
+
+      // Pick top 6 groups representing majority share
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+      if (sorted.length === 0) {
+        container.innerHTML = '<div style="font-family: var(--font-mono); font-size:10px; color:var(--gray-text); text-align:center; padding: 20px;">No demographic telemetry available.</div>';
+        return;
+      }
+
+      const totalVal = sorted.reduce((sum, e) => sum + e[1], 0);
+
+      // Glassmorphic backgrounds palette
+      const cardColors = [
+        { border: '#d1d9e9', bg: 'rgba(0, 113, 227, 0.08)' },
+        { border: '#e9d5ff', bg: 'rgba(150, 85, 200, 0.08)' },
+        { border: '#ccfbf1', bg: 'rgba(30, 169, 133, 0.08)' },
+        { border: '#fed7aa', bg: 'rgba(214, 90, 74, 0.08)' },
+        { border: '#fef08a', bg: 'rgba(214, 136, 39, 0.08)' },
+        { border: '#e2e8f0', bg: 'rgba(133, 168, 42, 0.08)' }
+      ];
+
+      // Proportional vertical layout dividing into a Left side (Big) and Right side (Small elements stacked)
+      const leftPart = document.createElement('div');
+      leftPart.style.flex = '5.5';
+      leftPart.style.display = 'flex';
+      leftPart.style.flexDirection = 'column';
+      leftPart.style.gap = '8px';
+
+      const rightPart = document.createElement('div');
+      rightPart.style.flex = '4.5';
+      rightPart.style.display = 'flex';
+      rightPart.style.flexDirection = 'column';
+      rightPart.style.gap = '8px';
+
+      // Left pane allocation: items 0 and 1
+      if (sorted[0]) {
+        leftPart.appendChild(createTreemapBox(sorted[0][0], sorted[0][1], totalVal, cardColors[0], '5.5'));
+      }
+      if (sorted[1]) {
+        leftPart.appendChild(createTreemapBox(sorted[1][0], sorted[1][1], totalVal, cardColors[1], '4.5'));
+      }
+
+      // Right pane allocation: items 2, 3, 4, 5
+      const rightSum = sorted.slice(2).reduce((sum, e) => sum + e[1], 0) || 1;
+      sorted.slice(2).forEach((item, idx) => {
+        const weight = (item[1] / rightSum) * 10;
+        rightPart.appendChild(createTreemapBox(item[0], item[1], totalVal, cardColors[2 + idx] || cardColors[5], weight.toFixed(1)));
+      });
+
+      container.appendChild(leftPart);
+      if (sorted.length > 2) {
+        container.appendChild(rightPart);
+      }
+    }
+
+    function createTreemapBox(name, val, total, color, flexGrow) {
+      const box = document.createElement('div');
+      box.className = 'treemap-box';
+      box.style.flex = flexGrow;
+      box.style.backgroundColor = color.bg;
+      box.style.borderColor = color.border;
+
+      const pct = ((val / total) * 100).toFixed(1);
+
+      box.innerHTML = `
+        <div class="treemap-box-title">${escapeHtml(name)}</div>
+        <div class="treemap-box-val">${pct}% <span style="font-size:10px;font-weight:400;color:var(--gray-text);">(${val})</span></div>
+      `;
+
+      box.title = `${name}: ${val} incidents (${pct}%)`;
+      return box;
+    }
+
+    // Advanced Chart 10: Threat Vector Co-occurrence Network (Canvas-rendered tag network)
+    function setupCooccurrenceNetwork() {
+      const cv = document.getElementById('canvasCooccurrence');
+      const ctx = cv.getContext('2d');
+      const DPR = window.devicePixelRatio || 1;
+
+      // Handle pointer events for interaction with nodes
+      cv.addEventListener('pointermove', (e) => {
+        const rect = cv.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        let bestNode = null;
+        let minDist = 14; // hover hit radius
+        
+        telemetry.cooccurrence.nodes.forEach(node => {
+          const dx = node.x - mouseX;
+          const dy = node.y - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < minDist) {
+            bestNode = node;
+            minDist = dist;
+          }
+        });
+
+        if (bestNode !== telemetry.cooccurrence.hoveredNode) {
+          telemetry.cooccurrence.hoveredNode = bestNode;
+          cv.style.cursor = bestNode ? 'pointer' : 'default';
+        }
+      });
+
+      cv.addEventListener('pointerleave', () => {
+        telemetry.cooccurrence.hoveredNode = null;
+        cv.style.cursor = 'default';
+      });
+    }
+
+    function recalculateCooccurrenceNetwork() {
+      // 1. We extract the top 8 most frequent tags in the dataset to map as co-occurrence nodes
+      const tagCounts = {};
+      telemetry.filtered.forEach(d => {
+        const tags = Array.isArray(d.tags) ? d.tags : [];
+        tags.forEach(t => {
+          if (t && t.length > 2) {
+            tagCounts[t] = (tagCounts[t] || 0) + 1;
+          }
+        });
+      });
+
+      const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(e => e[0]);
+      
+      const cv = document.getElementById('canvasCooccurrence');
+      const wrap = cv.parentElement;
+      const cw = wrap.clientWidth;
+      const ch = wrap.clientHeight || 260;
+
+      const DPR = window.devicePixelRatio || 1;
+      cv.width = cw * DPR;
+      cv.height = ch * DPR;
+      cv.style.width = `${cw}px`;
+      cv.style.height = `${ch}px`;
+
+      const ctx = cv.getContext('2d');
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+      // Generate nodes in circle
+      const nodes = [];
+      const centerX = cw / 2;
+      const centerY = ch / 2;
+      const radius = Math.min(cw, ch) * 0.35;
+
+      topTags.forEach((tag, idx) => {
+        const angle = (idx / topTags.length) * Math.PI * 2;
+        nodes.push({
+          id: tag,
+          label: tag.toUpperCase(),
+          x: centerX + Math.cos(angle) * radius,
+          y: centerY + Math.sin(angle) * radius,
+          origX: centerX + Math.cos(angle) * radius,
+          origY: centerY + Math.sin(angle) * radius,
+          angle: angle,
+          count: tagCounts[tag]
+        });
+      });
+
+      // Generate co-occurrence edges
+      const edges = [];
+      let maxCooccurrence = 1;
+
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          let cooccurrenceCount = 0;
+          telemetry.filtered.forEach(d => {
+            const tags = Array.isArray(d.tags) ? d.tags : [];
+            if (tags.includes(nodes[i].id) && tags.includes(nodes[j].id)) {
+              cooccurrenceCount++;
+            }
+          });
+
+          if (cooccurrenceCount > 0) {
+            if (cooccurrenceCount > maxCooccurrence) maxCooccurrence = cooccurrenceCount;
+            edges.push({
+              source: nodes[i],
+              target: nodes[j],
+              weight: cooccurrenceCount
+            });
+          }
+        }
+      }
+
+      telemetry.cooccurrence.nodes = nodes;
+      telemetry.cooccurrence.edges = edges;
+      telemetry.cooccurrence.maxWeight = maxCooccurrence;
+
+      // Start custom 2D canvas animation rendering frame loop
+      if (telemetry.cooccurrence.animationFrame) {
+        cancelAnimationFrame(telemetry.cooccurrence.animationFrame);
+      }
+      
+      let frame = 0;
+      function animateNetwork() {
+        frame++;
+        drawNetwork(frame);
+        telemetry.cooccurrence.animationFrame = requestAnimationFrame(animateNetwork);
+      }
+      animateNetwork();
+    }
+
+    function drawNetwork(frame) {
+      const cv = document.getElementById('canvasCooccurrence');
+      if (!cv) return;
+      const ctx = cv.getContext('2d');
+      const cw = cv.width / (window.devicePixelRatio || 1);
+      const ch = cv.height / (window.devicePixelRatio || 1);
+
+      ctx.clearRect(0, 0, cw, ch);
+
+      const nodes = telemetry.cooccurrence.nodes;
+      const edges = telemetry.cooccurrence.edges;
+      const hovered = telemetry.cooccurrence.hoveredNode;
+      const maxW = telemetry.cooccurrence.maxWeight || 1;
+
+      // Apply floating sinusoidal wave physics to coordinates
+      nodes.forEach(n => {
+        n.x = n.origX + Math.cos(frame * 0.02 + n.angle) * 3;
+        n.y = n.origY + Math.sin(frame * 0.025 + n.angle) * 3;
+      });
+
+      // 1. Draw Links
+      edges.forEach(edge => {
+        const isHoverMode = hovered !== null;
+        const isConnected = isHoverMode && (edge.source.id === hovered.id || edge.target.id === hovered.id);
+
+        if (isHoverMode && !isConnected) {
+          ctx.globalAlpha = 0.05; // fade out unrelated edges
+        } else {
+          ctx.globalAlpha = 0.45;
+        }
+
+        ctx.strokeStyle = isConnected ? '#0071e3' : '#d2d2d2';
+        ctx.lineWidth = 1 + (edge.weight / maxW) * 5;
+
+        ctx.beginPath();
+        ctx.moveTo(edge.source.x, edge.source.y);
+        ctx.lineTo(edge.target.x, edge.target.y);
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+
+      // 2. Draw Nodes
+      nodes.forEach(node => {
+        const isHoverMode = hovered !== null;
+        const isSelf = isHoverMode && node.id === hovered.id;
+        const isConnected = isHoverMode && edges.some(e => 
+          (e.source.id === node.id && e.target.id === hovered.id) ||
+          (e.target.id === node.id && e.source.id === hovered.id)
+        );
+
+        if (isHoverMode && !isSelf && !isConnected) {
+          ctx.globalAlpha = 0.15; // fade out unrelated nodes
+        } else {
+          ctx.globalAlpha = 1;
+        }
+
+        // Pulse ring on hover
+        if (isSelf) {
+          ctx.strokeStyle = '#0071e3';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, 11 + Math.sin(frame * 0.1) * 3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Main node pill
+        ctx.fillStyle = isSelf || isConnected ? '#0071e3' : '#9655c8';
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Node Label
+        ctx.font = '600 8.5px var(--font-mono)';
+        ctx.fillStyle = isSelf ? '#0071e3' : 'var(--ink-dim)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(node.label, node.x, node.y + 10);
+      });
+      ctx.globalAlpha = 1;
+
+      // 3. Draw tooltip overlay on canvas if hovered
+      if (hovered) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(17, 17, 17, 0.95)';
+        ctx.beginPath();
+        
+        const text = `#${hovered.id} · ${hovered.count} counts`;
+        ctx.font = '500 9.5px var(--font-sans)';
+        const textW = ctx.measureText(text).width + 16;
+        const tx = Math.max(8, Math.min(cw - textW - 8, hovered.x - textW / 2));
+        const ty = Math.max(8, hovered.y - 32);
+
+        // Tooltip box background
+        ctx.roundRect(tx, ty, textW, 18, 4);
+        ctx.fill();
+
+        // Tooltip text
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, tx + 8, ty + 9);
+        ctx.restore();
+      }
+    }
+
+    // =========================================================================
+    // Application Bootstrap Load Helpers
+    // =========================================================================
+    
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+
+    // Trigger loading
+    bootstrap();
+  </script>
+  <!-- Mobile bottom nav bar -->
+  <nav class="mobile-bottom-bar">
+    <a href="index.html" class="mobile-bar-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
+      <span>Observatory</span>
+    </a>
+    <a href="analytics.html" class="mobile-bar-item mobile-bar-active">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      <span>Analytics</span>
+    </a>
+    <a href="ethics.html" class="mobile-bar-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+      <span>Mindalike</span>
+    </a>
+  </nav>
+
+</body>
+</html>
