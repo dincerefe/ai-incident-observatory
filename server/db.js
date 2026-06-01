@@ -247,6 +247,7 @@ async function initDb() {
   }
 }
 
-initDb();
+const ready = initDb();
 
 module.exports = db;
+module.exports.ready = ready;
