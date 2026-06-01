@@ -4,9 +4,13 @@ const fs = require('fs');
 
 // DB path can be overridden via env (e.g. mounted volume on Railway/Fly).
 const dbPath = process.env.DB_PATH || path.join(__dirname, '../data/observatory.db');
+const bundledDbPath = path.join(__dirname, '../data/observatory.db');
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
+}
+if (!fs.existsSync(dbPath) && bundledDbPath !== dbPath && fs.existsSync(bundledDbPath)) {
+  fs.copyFileSync(bundledDbPath, dbPath);
 }
 const dbInstance = new sqlite3.Database(dbPath);
 
