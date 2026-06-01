@@ -39,6 +39,7 @@ RUN mkdir -p /data
 VOLUME /data
 
 # Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-ENV DATABASE_URL="file:///data/sqlite.db"
+EXPOSE 8080
+ENV DB_PATH="/data/observatory.db"
+ENV PORT="8080"
 CMD [ "npm", "run", "start" ]
