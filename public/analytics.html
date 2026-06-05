@@ -542,6 +542,12 @@
         return null;
       }
 
+      // Turkey / Türkiye
+      const turkeyNames = ['turkey', 'türkiye'];
+      if (turkeyNames.includes(lower)) {
+        return 'Türkiye';
+      }
+
       // USA & US States
       const usNames = [
         'united states', 'usa', 'us', 'united states of america',

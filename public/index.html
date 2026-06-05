@@ -435,6 +435,12 @@
         return null;
       }
 
+      // Turkey / Türkiye
+      const turkeyNames = ['turkey', 'türkiye'];
+      if (turkeyNames.includes(lower)) {
+        return 'Türkiye';
+      }
+
       // USA & US States
       const usNames = [
         'united states', 'usa', 'us', 'united states of america',
@@ -927,7 +933,12 @@
       // Otherwise collect each known country from the parts
       const countries = [];
       for (const p of parts) {
-        if (GEO_COORDS[p]) countries.push(p);
+        const norm = normalizeGeography(p);
+        if (norm && GEO_COORDS[norm]) {
+          countries.push(norm);
+        } else if (GEO_COORDS[p]) {
+          countries.push(p);
+        }
       }
       return countries.length > 0 ? countries : ['Global'];
     }
@@ -1887,6 +1898,14 @@
         });
       }
 
+      // Keep only particles that belong to the selected geography filters when a filter is active
+      if (state.filters.geography && !state.filters.geography.includes('all')) {
+        const activeGeos = state.filters.geography;
+        const filteredList = particles.filter(p => activeGeos.includes(p.destCountry));
+        particles.length = 0;
+        particles.push(...filteredList);
+      }
+
       // Fade-out for filtered-away particles — also driven by the render-loop lerp, not GSAP.
       const activeIds = new Set(particles.map(p => p.id));
       prevParticles.forEach(prevP => {
@@ -2011,8 +2030,25 @@
             const feature = getGeoJSONFeature(country);
             if (feature && d3) {
               try {
+                // If it's a MultiPolygon, extract the largest polygon (mainland) to avoid overseas territories
+                // from bloating the bounding box and breaking the density spacing calculation.
+                let geoObj = feature.geometry;
+                if (geoObj && geoObj.type === 'MultiPolygon') {
+                  let maxLen = 0;
+                  let mainCoords = null;
+                  geoObj.coordinates.forEach(poly => {
+                    if (poly[0] && poly[0].length > maxLen) {
+                      maxLen = poly[0].length;
+                      mainCoords = poly;
+                    }
+                  });
+                  if (mainCoords) {
+                    geoObj = { type: 'Polygon', coordinates: mainCoords };
+                  }
+                }
+
                 const path = d3.geoPath().projection(state._geoProjection);
-                const [[x0, y0], [x1, y1]] = path.bounds(feature);
+                const [[x0, y0], [x1, y1]] = path.bounds(geoObj);
                 boundingBoxY1 = y1;
 
                 const w = x1 - x0;
@@ -2029,7 +2065,7 @@
                   for (let x = x0 + spacing / 2; x < x1; x += spacing) {
                     for (let y = y0 + spacing / 2; y < y1; y += spacing) {
                       const c = state._geoProjection.invert([x, y]);
-                      if (c && d3.geoContains(feature, c)) {
+                      if (c && d3.geoContains(geoObj, c)) {
                         candidates.push({ x, y });
                       }
                     }
@@ -2074,6 +2110,15 @@
               });
             }
             boundingBoxY1 = projected[1] + (rows / 2) * maxSpacing;
+          }
+
+          // Deterministic seeded shuffle to scatter categories and severities across the grid
+          const seed = N * 7 + country.charCodeAt(0);
+          for (let i = placedPoints.length - 1; i > 0; i--) {
+            const r = Math.floor(seededRand(seed + i) * (i + 1));
+            const temp = placedPoints[i];
+            placedPoints[i] = placedPoints[r];
+            placedPoints[r] = temp;
           }
 
           // Apply coordinates to the group particles
