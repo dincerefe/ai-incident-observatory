@@ -370,6 +370,17 @@
 
     /* Retake */
     .retake-row { text-align: center; padding: 16px 0; }
+    .retake-row button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 200px;
+      height: 42px;
+      box-sizing: border-box;
+      padding: 0 24px !important;
+      font-size: 13px !important;
+      line-height: normal;
+    }
     .btn-retake {
       padding: 12px 36px; border-radius: 50px;
       background: #85a82a;
@@ -914,7 +925,7 @@
   <header>
     <div class="brand">
       <h1>AI Incident Observatory</h1>
-      <span class="sub">AI Mindalike</span>
+      <span class="sub">Quiz</span>
     </div>
     
     <!-- Spacer to keep navigation controls on the right in 3-column grid -->
@@ -922,15 +933,18 @@
 
     <div class="navigation-controls">
       <a href="index.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
-        <span>Observatory</span>
+        <span>Home</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
       </a>
 
       <a href="analytics.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
         <span>Analytics</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
       </a>
 
       <a href="ethics.html" class="nav-btn nav-desktop-only active" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
-        <span>AI Mindalike</span>
+        <span>Quiz</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
       </a>
     </div>
   </header>
@@ -1007,7 +1021,6 @@
       </div>
       <div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;">
         <button class="btn-start" id="btnStart">Start the Quiz →</button>
-        <button class="btn-submit-quiz" id="btnSeeSoulmate" style="display:none; padding:16px 48px; font-size:15px;">See Your AI Mindalike</button>
         <button class="btn-view-charts" id="btnViewGlobalStats">View Global Charts →</button>
       </div>
     </div>
@@ -1078,7 +1091,7 @@
         <button class="btn-quiz-next" id="btnNext">Next →</button>
       </div>
       <div class="quiz-exit-row" style="text-align: center; margin-top: 24px;">
-        <button class="btn-quiz-nav" id="btnExitQuiz" style="border-color: var(--gray-border-dark);">↩ Exit to Mindalike Start</button>
+        <button class="btn-quiz-nav" id="btnExitQuiz" style="border-color: var(--gray-border-dark);">↩ Return to Quiz Page</button>
       </div>
     </div>
   </div>
@@ -1186,7 +1199,7 @@
         <div style="margin-bottom:12px;font-size:12px;color:var(--gray-text)" id="retakeProgress"></div>
         <button class="btn-retake" id="btnRetake">Next Round →</button>
         <button class="btn-retake" id="btnRetakeReset" style="margin-left:10px;display:none">↩ Reset &amp; Start Over</button>
-        <button class="btn-view-charts" id="btnBackToIntro" style="margin-left:10px; padding: 12px 36px; font-size: 13px; box-shadow: none; background: var(--gray-border-dark);">↩ Mindalike Start</button>
+        <button class="btn-quiz-nav" id="btnBackToIntro" style="margin-left:10px; box-shadow: none; border-color: var(--gray-border-dark);">↩ Return to Quiz Page</button>
       </div>
     </div>
   </div>
@@ -2316,12 +2329,12 @@
     if (remaining > 0) {
       retakeProgress.textContent = `You've explored ${total - remaining} of ${total} questions. ${remaining} remaining.`;
       btnRetake.textContent = `Next Round → (${remaining} left)`;
-      btnRetake.style.display = 'inline-block';
+      btnRetake.style.display = 'inline-flex';
       btnRetakeReset.style.display = 'none';
     } else {
       retakeProgress.textContent = `🎉 You've explored all ${total} questions!`;
       btnRetake.style.display = 'none';
-      btnRetakeReset.style.display = 'inline-block';
+      btnRetakeReset.style.display = 'inline-flex';
     }
 
     // Render collapsible score chips list
@@ -2377,25 +2390,41 @@
     buildDistChart(globalStats.distribution);
     buildLeaderboard(globalStats.distribution);
 
-    // Hide standard retake buttons, show "Take the Quiz" button
-    document.getElementById('retakeProgress').style.display = 'none';
-    document.getElementById('btnRetake').style.display = 'none';
-    document.getElementById('btnRetakeReset').style.display = 'none';
+    const answered = getAnsweredIds();
+    const hasDoneQuiz = answered.size > 0;
+    const btnGo = document.getElementById('btnGoToQuiz');
 
-    let btnGo = document.getElementById('btnGoToQuiz');
-    if (!btnGo) {
-      const row = document.querySelector('.retake-row');
-      btnGo = document.createElement('button');
-      btnGo.id = 'btnGoToQuiz';
-      btnGo.className = 'btn-start';
-      btnGo.textContent = 'Take the Quiz →';
-      btnGo.addEventListener('click', () => {
-        showView('viewIntro');
-        startQuiz();
-      });
-      row.appendChild(btnGo);
+    if (hasDoneQuiz) {
+      if (btnGo) btnGo.style.display = 'none';
+
+      const remaining = allQuestions.filter(q => !answered.has(q.id)).length;
+      if (remaining > 0) {
+        document.getElementById('btnRetake').textContent = `Next Round → (${remaining} left)`;
+        document.getElementById('btnRetake').style.display = 'inline-flex';
+        document.getElementById('btnRetakeReset').style.display = 'none';
+      } else {
+        document.getElementById('btnRetake').style.display = 'none';
+        document.getElementById('btnRetakeReset').style.display = 'inline-flex';
+      }
     } else {
-      btnGo.style.display = 'inline-block';
+      document.getElementById('btnRetake').style.display = 'none';
+      document.getElementById('btnRetakeReset').style.display = 'none';
+
+      if (!btnGo) {
+        const row = document.querySelector('.retake-row');
+        const newBtnGo = document.createElement('button');
+        newBtnGo.id = 'btnGoToQuiz';
+        newBtnGo.className = 'btn-start';
+        newBtnGo.textContent = 'Take the Quiz →';
+        newBtnGo.addEventListener('click', () => {
+          showView('viewIntro');
+          startQuiz();
+        });
+        const btnBack = document.getElementById('btnBackToIntro');
+        row.insertBefore(newBtnGo, btnBack);
+      } else {
+        btnGo.style.display = 'inline-flex';
+      }
     }
 
     window.scrollTo(0, 0);
@@ -2966,7 +2995,6 @@
   });
 
   document.getElementById('btnStart').addEventListener('click', startQuiz);
-  document.getElementById('btnSeeSoulmate').addEventListener('click', seeSoulmateFromLanding);
   document.getElementById('btnViewGlobalStats').addEventListener('click', renderGlobalStatsOnly);
   document.getElementById('btnViewSavedResults').addEventListener('click', showSavedResults);
 
@@ -3037,7 +3065,7 @@
   <nav class="mobile-bottom-bar">
     <a href="index.html" class="mobile-bar-item">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
-      <span>Observatory</span>
+      <span>Home</span>
     </a>
     <a href="analytics.html" class="mobile-bar-item">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -3045,7 +3073,7 @@
     </a>
     <a href="ethics.html" class="mobile-bar-item mobile-bar-active">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-      <span>Mindalike</span>
+      <span>Quiz</span>
     </a>
   </nav>
 

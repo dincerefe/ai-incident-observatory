@@ -354,7 +354,7 @@
 
     <div class="navigation-controls">
       <a href="index.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
-        <span>Observatory</span>
+        <span>Home</span>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
       </a>
 
@@ -364,7 +364,8 @@
       </a>
 
       <a href="ethics.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
-        <span>AI Mindalike</span>
+        <span>Quiz</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
       </a>
     </div>
   </header>
@@ -526,6 +527,177 @@
 
   <!-- JavaScript Telemetry Dashboard Controller -->
   <script>
+    // Normalize geography/country names to clean up duplicates, states, and non-country terms
+    function normalizeGeography(geo) {
+      if (!geo) return null;
+      const val = geo.trim();
+      const lower = val.toLowerCase();
+
+      // Catch-all/regions to combine under "All regions"
+      const catchAlls = [
+        'all', 'global', 'unknown', 'international', 'worldwide', 'multiple', 'various', 
+        'europe', 'eu', 'canary islands'
+      ];
+      if (catchAlls.includes(lower)) {
+        return null;
+      }
+
+      // USA & US States
+      const usNames = [
+        'united states', 'usa', 'us', 'united states of america',
+        'california', 'texas', 'new york', 'florida', 'illinois', 'washington', 
+        'colorado', 'delaware', 'georgia', 'arizona', 'oregon', 'nevada', 'ohio', 
+        'michigan', 'virginia', 'massachusetts', 'pennsylvania', 'north dakota'
+      ];
+      if (usNames.includes(lower)) {
+        return 'United States';
+      }
+
+      // United Kingdom
+      const ukNames = [
+        'united kingdom', 'uk', 'britain', 'england', 'scotland', 'wales', 
+        'northern ireland', 'uk - england', 'uk- england'
+      ];
+      if (ukNames.includes(lower)) {
+        return 'United Kingdom';
+      }
+
+      // United Arab Emirates
+      const uaeNames = [
+        'uae', 'united arab emirates', 'uae - abu dhabi', 'uae - abu dhabia', 'dubai'
+      ];
+      if (uaeNames.includes(lower)) {
+        return 'United Arab Emirates';
+      }
+
+      // South Korea
+      const sKoreaNames = ['south korea', 'korea', 's korea'];
+      if (sKoreaNames.includes(lower)) {
+        return 'South Korea';
+      }
+
+      // North Korea
+      const nKoreaNames = ['north korea', 'n korea'];
+      if (nKoreaNames.includes(lower)) {
+        return 'North Korea';
+      }
+
+      // Hungary
+      if (lower === 'hungary' || lower === 'eu - hungary' || lower === 'eu hungary') {
+        return 'Hungary';
+      }
+
+      // Ireland
+      if (lower === 'ireland' || lower === 'republic of ireland' || lower === 'rep ireland') {
+        return 'Ireland';
+      }
+
+      // Czech Republic
+      if (lower === 'czechia' || lower === 'czech republic') {
+        return 'Czech Republic';
+      }
+
+      // Bosnia
+      if (lower === 'bosnia' || lower === 'bosnia and herzegovina') {
+        return 'Bosnia and Herzegovina';
+      }
+
+      // North Macedonia
+      if (lower === 'macedonia' || lower === 'north macedonia') {
+        return 'North Macedonia';
+      }
+
+      // Mexico
+      if (lower === 'mexi') return 'Mexico';
+      // Burkina Faso
+      if (lower === 'burkino faso' || lower === 'burkina faso') return 'Burkina Faso';
+      // Zanzibar
+      if (lower === 'zanzib' || lower === 'zanzibar') return 'Zanzibar';
+
+      return val;
+    }
+
+    // Normalize company/developer names to merge sub-branches and remove duplicates
+    function normalizeCompany(company) {
+      if (!company) return null;
+      const val = company.trim();
+      const lower = val.toLowerCase();
+
+      // Exclude catch-alls/non-specific labels
+      const ignoreList = [
+        'unknown', 'unnamed', 'unspecified', 'various', 'n/a', 'none', 'null',
+        'unnamed developer', 'unknown developer', 'unnamed company', 'unnamed companies'
+      ];
+      if (ignoreList.includes(lower)) {
+        return null;
+      }
+
+      // Google
+      if (lower.includes('google') || lower === 'alphabet' || lower === 'youtube') {
+        return 'Google';
+      }
+      // Microsoft
+      if (lower.includes('microsoft') || lower === 'github') {
+        return 'Microsoft';
+      }
+      // Amazon
+      if (lower.includes('amazon') || lower === 'aws' || lower.includes('amazon web services')) {
+        return 'Amazon';
+      }
+      // Meta
+      if (lower.includes('meta platforms') || lower === 'meta' || lower === 'facebook' || lower === 'instagram' || lower === 'whatsapp') {
+        return 'Meta';
+      }
+      // OpenAI
+      if (lower.includes('openai')) {
+        return 'OpenAI';
+      }
+      // Anthropic
+      if (lower.includes('anthropic')) {
+        return 'Anthropic';
+      }
+      // Alibaba
+      if (lower.includes('alibaba') || lower.includes('alipay') || lower.includes('ali-pay')) {
+        return 'Alibaba';
+      }
+      // Tencent
+      if (lower.includes('tencent') || lower.includes('wechat')) {
+        return 'Tencent';
+      }
+      // ByteDance
+      if (lower.includes('bytedance') || lower.includes('tiktok')) {
+        return 'ByteDance';
+      }
+      // Baidu
+      if (lower.includes('baidu')) {
+        return 'Baidu';
+      }
+      // Apple
+      if (lower.includes('apple')) {
+        return 'Apple';
+      }
+      // Mistral
+      if (lower.includes('mistral')) {
+        return 'Mistral';
+      }
+      // Tesla
+      if (lower.includes('tesla')) {
+        return 'Tesla';
+      }
+      // IBM
+      if (lower.includes('ibm')) {
+        return 'IBM';
+      }
+
+      // If the string starts with "unnamed" or "unknown" and has more text, clean it up
+      if (lower.startsWith('unnamed ') || lower.startsWith('unknown ')) {
+        const cleaned = val.replace(/^(unnamed|unknown)\s+/gi, '');
+        if (cleaned) return cleaned;
+      }
+
+      return val;
+    }
+
     // =========================================================================
     // Core Chart Configurations & Palette Definitions
     // =========================================================================
@@ -622,10 +794,18 @@
         // Extract unique regions for filter select
         const regionSet = new Set();
         telemetry.raw.forEach(inc => {
-          if (inc.geography) regionSet.add(inc.geography.trim());
+          if (inc.geography) {
+            const parts = inc.geography.split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
+            parts.forEach(country => {
+              const norm = normalizeGeography(country);
+              if (norm) {
+                regionSet.add(norm);
+              }
+            });
+          }
         });
         
-        telemetry.regions = [...regionSet].sort();
+        telemetry.regions = [...regionSet].sort((a, b) => a.localeCompare(b));
         populateFilterDropdown();
 
         // Bind filter event
@@ -666,7 +846,11 @@
       if (geo === 'all') {
         telemetry.filtered = [...telemetry.raw];
       } else {
-        telemetry.filtered = telemetry.raw.filter(i => i.geography === geo);
+        telemetry.filtered = telemetry.raw.filter(i => {
+          if (!i.geography) return false;
+          const parts = i.geography.split(/[;,\/]/).map(s => normalizeGeography(s)).filter(Boolean);
+          return parts.includes(geo);
+        });
       }
       updateDashboard();
     }
@@ -890,11 +1074,19 @@
     function renderDeveloperChart() {
       const devMap = {};
       telemetry.filtered.forEach(d => {
-        const name = d.developer || 'Unknown Developer';
-        devMap[name] = (devMap[name] || 0) + 1;
+        if (d.developer) {
+          const parts = d.developer.split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
+          const normParts = [...new Set(parts.map(normalizeCompany).filter(Boolean))];
+          normParts.forEach(norm => {
+            devMap[norm] = (devMap[norm] || 0) + 1;
+          });
+        }
       });
 
-      const sortedDevs = Object.entries(devMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      const sortedDevs = Object.entries(devMap)
+        .filter(e => e[0] !== 'Other Developers')
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
       const labels = sortedDevs.map(e => e[0]);
       const values = sortedDevs.map(e => e[1]);
 
@@ -1102,7 +1294,11 @@
       const geoMap = {};
       telemetry.filtered.forEach(d => {
         if (d.geography) {
-          geoMap[d.geography] = (geoMap[d.geography] || 0) + 1;
+          const parts = d.geography.split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
+          const normParts = [...new Set(parts.map(normalizeGeography).filter(Boolean))];
+          normParts.forEach(norm => {
+            geoMap[norm] = (geoMap[norm] || 0) + 1;
+          });
         }
       });
 
@@ -1629,7 +1825,7 @@
   <nav class="mobile-bottom-bar">
     <a href="index.html" class="mobile-bar-item">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
-      <span>Observatory</span>
+      <span>Home</span>
     </a>
     <a href="analytics.html" class="mobile-bar-item mobile-bar-active">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -1637,7 +1833,7 @@
     </a>
     <a href="ethics.html" class="mobile-bar-item">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-      <span>Mindalike</span>
+      <span>Quiz</span>
     </a>
   </nav>
 

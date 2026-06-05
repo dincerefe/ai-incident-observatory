@@ -48,18 +48,24 @@
       
       <!-- Cluster View selectors on the left of search bar -->
       <div class="view-controls">
-        <select class="nav-btn" id="viewSelect" style="pointer-events: auto; padding-right: 28px; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2386868b%22 stroke-width=%223%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer;">
-          <option value="clusters">View: Clusters</option>
-          <option value="network">View: Network</option>
-          <option value="timeline">View: Timeline</option>
-          <option value="severity">View: Severity</option>
-          <option value="geography">View: Geography</option>
-        </select>
+        <div class="select-wrapper">
+          <select class="nav-btn" id="viewSelect" style="pointer-events: auto; padding-right: 28px; min-width: 140px; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23333333%22 stroke-width=%223%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer;">
+            <option value="clusters">Category</option>
+            <option value="network">Network</option>
+            <option value="timeline">Timeline</option>
+            <option value="severity">Severity</option>
+            <option value="geography">Geography</option>
+          </select>
+          <span id="viewSelectLabel">View: Category</span>
+        </div>
 
-        <select class="nav-btn" id="colorSelect" style="pointer-events: auto; padding-right: 28px; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2386868b%22 stroke-width=%223%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer;">
-          <option value="category">Color: By Category</option>
-          <option value="developer">Color: By Company</option>
-        </select>
+        <div class="select-wrapper">
+          <select class="nav-btn" id="colorSelect" style="pointer-events: auto; padding-right: 28px; min-width: 160px; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23333333%22 stroke-width=%223%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer;">
+            <option value="category">By Category</option>
+            <option value="developer">By Company</option>
+          </select>
+          <span id="colorSelectLabel">Color: By Category</span>
+        </div>
       </div>
     </div>
     
@@ -81,7 +87,7 @@
 
     <div class="navigation-controls">
       <a href="index.html" class="nav-btn nav-desktop-only active" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: none;">
-        <span>Observatory</span>
+        <span>Home</span>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
       </a>
 
@@ -91,7 +97,8 @@
       </a>
 
       <a href="ethics.html" class="nav-btn nav-desktop-only" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: auto;">
-        <span>AI Mindalike</span>
+        <span>Quiz</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
       </a>
     </div>
   </header>
@@ -100,7 +107,7 @@
   <nav class="mobile-bottom-bar">
     <a href="index.html" class="mobile-bar-item mobile-bar-active">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path></svg>
-      <span>Observatory</span>
+      <span>Home</span>
     </a>
     <a href="analytics.html" class="mobile-bar-item">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -108,7 +115,7 @@
     </a>
     <a href="ethics.html" class="mobile-bar-item">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-      <span>Mindalike</span>
+      <span>Quiz</span>
     </a>
   </nav>
 
@@ -126,9 +133,9 @@
         <div class="filter-group-title">Severity Class</div>
         <div class="chip-container" id="filterContainerSeverity">
           <div class="filter-chip active" data-sev="all">All Severities</div>
-          <div class="filter-chip" data-sev="1">SEV 1</div>
-          <div class="filter-chip" data-sev="2">SEV 2</div>
-          <div class="filter-chip" data-sev="3">SEV 3</div>
+          <div class="filter-chip" data-sev="1">Minor</div>
+          <div class="filter-chip" data-sev="2">Moderate</div>
+          <div class="filter-chip" data-sev="3">Critical</div>
         </div>
       </div>
 
@@ -183,12 +190,12 @@
         <div class="filter-group-title">Source Registry</div>
         <div class="chip-container" id="filterContainerSource">
           <div class="filter-chip active" data-src="all">All Registries</div>
-          <div class="filter-chip" data-src="aiid">AIID Database</div>
           <div class="filter-chip" data-src="aiaaic">AIAAIC Repository</div>
+          <div class="filter-chip" data-src="aiid">AIID Database</div>
           <div class="filter-chip" data-src="avid">AVID Vulnerability</div>
-          <div class="filter-chip" data-src="atlas">MITRE ATLAS</div>
-          <div class="filter-chip" data-src="news">Live News RSS</div>
           <div class="filter-chip" data-src="manual">Iconic Seeds</div>
+          <div class="filter-chip" data-src="news">Live News RSS</div>
+          <div class="filter-chip" data-src="atlas">MITRE ATLAS</div>
         </div>
       </div>
 
@@ -272,7 +279,7 @@
         
         <div class="stat-bar-row">
           <div class="stat-bar-lbl">
-            <span>SEV 3 (Critical)</span>
+            <span>Critical</span>
             <span id="statPctSev3" style="font-family: var(--font-mono); font-size: 10px;">0%</span>
           </div>
           <div class="stat-bar-bg">
@@ -282,7 +289,7 @@
 
         <div class="stat-bar-row">
           <div class="stat-bar-lbl">
-            <span>SEV 2 (Moderate)</span>
+            <span>Moderate</span>
             <span id="statPctSev2" style="font-family: var(--font-mono); font-size: 10px;">0%</span>
           </div>
           <div class="stat-bar-bg">
@@ -292,7 +299,7 @@
 
         <div class="stat-bar-row">
           <div class="stat-bar-lbl">
-            <span>SEV 1 (Minor)</span>
+            <span>Minor</span>
             <span id="statPctSev1" style="font-family: var(--font-mono); font-size: 10px;">0%</span>
           </div>
           <div class="stat-bar-bg">
@@ -413,6 +420,226 @@
 
   <!-- Dynamic Logic JavaScript -->
   <script>
+    // Normalize geography/country names to clean up duplicates, states, and non-country terms
+    function normalizeGeography(geo) {
+      if (!geo) return null;
+      const val = geo.trim();
+      const lower = val.toLowerCase();
+
+      // Catch-all/regions to combine under "All regions"
+      const catchAlls = [
+        'all', 'global', 'unknown', 'international', 'worldwide', 'multiple', 'various', 
+        'europe', 'eu', 'canary islands'
+      ];
+      if (catchAlls.includes(lower)) {
+        return null;
+      }
+
+      // USA & US States
+      const usNames = [
+        'united states', 'usa', 'us', 'united states of america',
+        'california', 'texas', 'new york', 'florida', 'illinois', 'washington', 
+        'colorado', 'delaware', 'georgia', 'arizona', 'oregon', 'nevada', 'ohio', 
+        'michigan', 'virginia', 'massachusetts', 'pennsylvania', 'north dakota'
+      ];
+      if (usNames.includes(lower)) {
+        return 'United States';
+      }
+
+      // United Kingdom
+      const ukNames = [
+        'united kingdom', 'uk', 'britain', 'england', 'scotland', 'wales', 
+        'northern ireland', 'uk - england', 'uk- england'
+      ];
+      if (ukNames.includes(lower)) {
+        return 'United Kingdom';
+      }
+
+      // United Arab Emirates
+      const uaeNames = [
+        'uae', 'united arab emirates', 'uae - abu dhabi', 'uae - abu dhabia', 'dubai'
+      ];
+      if (uaeNames.includes(lower)) {
+        return 'United Arab Emirates';
+      }
+
+      // South Korea
+      const sKoreaNames = ['south korea', 'korea', 's korea'];
+      if (sKoreaNames.includes(lower)) {
+        return 'South Korea';
+      }
+
+      // North Korea
+      const nKoreaNames = ['north korea', 'n korea'];
+      if (nKoreaNames.includes(lower)) {
+        return 'North Korea';
+      }
+
+      // Hungary
+      if (lower === 'hungary' || lower === 'eu - hungary' || lower === 'eu hungary') {
+        return 'Hungary';
+      }
+
+      // Ireland
+      if (lower === 'ireland' || lower === 'republic of ireland' || lower === 'rep ireland') {
+        return 'Ireland';
+      }
+
+      // Czech Republic
+      if (lower === 'czechia' || lower === 'czech republic') {
+        return 'Czech Republic';
+      }
+
+      // Bosnia
+      if (lower === 'bosnia' || lower === 'bosnia and herzegovina') {
+        return 'Bosnia and Herzegovina';
+      }
+
+      // North Macedonia
+      if (lower === 'macedonia' || lower === 'north macedonia') {
+        return 'North Macedonia';
+      }
+
+      // Mexico
+      if (lower === 'mexi') return 'Mexico';
+      // Burkina Faso
+      if (lower === 'burkino faso' || lower === 'burkina faso') return 'Burkina Faso';
+      // Zanzibar
+      if (lower === 'zanzib' || lower === 'zanzibar') return 'Zanzibar';
+
+      return val;
+    }
+
+    // Normalize company/developer names to merge sub-branches and remove duplicates
+    function normalizeCompany(company) {
+      if (!company) return null;
+      const val = company.trim();
+      const lower = val.toLowerCase();
+
+      // Exclude catch-alls/non-specific labels
+      const ignoreList = [
+        'unknown', 'unnamed', 'unspecified', 'various', 'n/a', 'none', 'null',
+        'unnamed developer', 'unknown developer', 'unnamed company', 'unnamed companies'
+      ];
+      if (ignoreList.includes(lower)) {
+        return null;
+      }
+
+      // Google
+      if (lower.includes('google') || lower === 'alphabet' || lower === 'youtube') {
+        return 'Google';
+      }
+      // Microsoft
+      if (lower.includes('microsoft') || lower === 'github') {
+        return 'Microsoft';
+      }
+      // Amazon
+      if (lower.includes('amazon') || lower === 'aws' || lower.includes('amazon web services')) {
+        return 'Amazon';
+      }
+      // Meta
+      if (lower.includes('meta platforms') || lower === 'meta' || lower === 'facebook' || lower === 'instagram' || lower === 'whatsapp') {
+        return 'Meta';
+      }
+      // OpenAI
+      if (lower.includes('openai')) {
+        return 'OpenAI';
+      }
+      // Anthropic
+      if (lower.includes('anthropic')) {
+        return 'Anthropic';
+      }
+      // Alibaba
+      if (lower.includes('alibaba') || lower.includes('alipay') || lower.includes('ali-pay')) {
+        return 'Alibaba';
+      }
+      // Tencent
+      if (lower.includes('tencent') || lower.includes('wechat')) {
+        return 'Tencent';
+      }
+      // ByteDance
+      if (lower.includes('bytedance') || lower.includes('tiktok')) {
+        return 'ByteDance';
+      }
+      // Baidu
+      if (lower.includes('baidu')) {
+        return 'Baidu';
+      }
+      // Apple
+      if (lower.includes('apple')) {
+        return 'Apple';
+      }
+      // Mistral
+      if (lower.includes('mistral')) {
+        return 'Mistral';
+      }
+      // Tesla
+      if (lower.includes('tesla')) {
+        return 'Tesla';
+      }
+      // IBM
+      if (lower.includes('ibm')) {
+        return 'IBM';
+      }
+      // NVIDIA
+      if (lower.includes('nvidia') || lower === 'nvida') {
+        return 'NVIDIA';
+      }
+
+      // Check if it's a company or institution by keywords or known list
+      const companyKeywords = [
+        'inc', 'corp', 'co', 'ltd', 'group', 'technologies', 'tech', 'labs', 'systems', 'solutions',
+        'corporation', 'llc', 'gmbh', 'ag', 'sa', 'pty', 'limited', 'plc', 'software', 'ai', 'agency',
+        'department', 'police', 'ministry', 'university', 'institute', 'college', 'school', 'foundation',
+        'commission', 'court', 'administration', 'authority', 'board', 'district', 'association', 'center',
+        'council', 'government', 'observatory', 'observatories', 'news', 'press', 'times', 'post', 'journal',
+        'herald', 'tribune', 'chronicle', 'globe', 'guardian', 'gazette', 'dispatch', 'inquest', 'alliance',
+        'network', 'networks', 'services', 'service', 'database', 'databases', 'repository', 'repositories',
+        'vulnerability', 'vulnerabilities', 'atlas', 'news', 'rss', 'seed', 'seeds', 'developer', 'developers',
+        'company', 'companies', 'enterprise', 'enterprises', 'organization', 'organizations'
+      ];
+      
+      const knownCompanies = new Set([
+        'google', 'microsoft', 'amazon', 'meta', 'apple', 'openai', 'anthropic', 'alibaba', 'tencent',
+        'bytedance', 'baidu', 'tesla', 'ibm', 'nvidia', 'uber', 'lyft', 'adobe', 'oracle', 'salesforce',
+        'intel', 'samsung', 'sony', 'spotify', 'snapchat', 'snap', 'twitter', 'x corp', 'x', 'netflix', 'airbnb',
+        'zoom', 'tiktok', 'midjourney', 'stability', 'hugging face', 'huggingface', 'runway', 'discord',
+        'slack', 'atlassian', 'palantir', 'c3.ai', 'c3ai', 'databricks', 'snowflake', 'splunk', 'cloudera',
+        'mongodb', 'elastic', 'confluent', 'fastly', 'cloudflare', 'akamai', 'shopify', 'stripe', 'paypal',
+        'square', 'block', 'robinhood', 'coinbase', 'binance', 'kraken', 'zoominfo', 'asana', 'monday.com',
+        'trello', 'jira', 'figma', 'canva', 'adobe', 'autodesk', 'unity', 'epic games', 'valve', 'ea',
+        'activision', 'ubisoft', 'nintendo', 'sega', 'capcom', 'bandai', 'square enix', 'konami',
+        'rtx', 'lockheed', 'boeing', 'airbus', 'northrop', 'general dynamics', 'raytheon', 'honeywell',
+        'ge', 'siemens', 'bosch', 'philips', 'abb', 'schneider', 'rockwell', 'emerson', 'honeywell',
+        'ford', 'gm', 'toyota', 'honda', 'nissan', 'hyundai', 'kia', 'bmw', 'mercedes', 'audi', 'porsche',
+        'volkswagen', 'volvo', 'stellantis', 'renault', 'peugeot', 'fiat', 'chrysler', 'ferrari', 'lamborghini',
+        'byd', 'nio', 'xpeng', 'li auto', 'geely', 'changan', 'saic', 'wuling', 'gac', 'dongfeng', 'faw',
+        'cognizant', 'infosys', 'wipro', 'tcs', 'accenture', 'capgemini', 'atos', 'deloitte', 'ey', 'pwc',
+        'kpmg', 'mckinsey', 'bcg', 'bain', 'gartner', 'idc', 'forrester', 'bloomberg', 'reuters', 'ap',
+        'nytimes', 'wsj', 'ft', 'guardian', 'bbc', 'cnn', 'fox', 'nbc', 'cbs', 'abc', 'pbs', 'npr',
+        'upstart', 'verkada', 'vexcel', 'videmo', 'videonetics', 'videtics', 'viggle', 'vigilant', 'vivacity',
+        'volaris', 'wacom', 'walgreens', 'waymo', 'waze', 'wccftech', 'wechat', 'weibo', 'wikipedia',
+        'wix', 'deviantart', 'wondershare', 'ufoto', 'workaround', 'workday', 'wysa', 'xsolla', 'yahoo',
+        'yandex', 'zenity', 'zeroeyes', 'zillow'
+      ]);
+
+      const words = lower.split(/\s+/);
+      const isKnown = knownCompanies.has(lower) || [...knownCompanies].some(c => lower.includes(c));
+      const hasCorpKeyword = words.some(w => companyKeywords.includes(w)) || 
+                             companyKeywords.some(kw => lower.includes(' ' + kw) || lower.includes(kw + ' '));
+
+      if (isKnown || hasCorpKeyword) {
+        // If the string starts with "unnamed" or "unknown" and has more text, clean it up
+        if (lower.startsWith('unnamed ') || lower.startsWith('unknown ')) {
+          const cleaned = val.replace(/^(unnamed|unknown)\s+/gi, '');
+          if (cleaned) return cleaned;
+        }
+        return val;
+      }
+
+      return 'Other Developers';
+    }
+
     // =========================================================================
     // Configurations and Color Mappings
     // =========================================================================
@@ -825,7 +1052,7 @@
           state.rawIncidents = cached.data;
           addSearchBlobs(state.rawIncidents);
 
-          const [resDev, resCat] = await Promise.all([fetch('/api/developers'), fetch('/api/categories')]);
+          const [resDev, resCat] = await Promise.all([fetch('/api/incidents/developers'), fetch('/api/incidents/categories')]);
           state.uniqueDevelopers = resDev.ok ? await resDev.json() : [];
           state.uniqueCategories = resCat.ok ? await resCat.json() : [];
 
@@ -838,11 +1065,10 @@
           return;
         }
 
-        // No cache — fetch ALL pages + devs + cats in parallel before first render
         const [allData, resDev, resCat] = await Promise.all([
           fetchAllIncidents(),
-          fetch('/api/developers'),
-          fetch('/api/categories')
+          fetch('/api/incidents/developers'),
+          fetch('/api/incidents/categories')
         ]);
 
         state.rawIncidents = allData;
@@ -863,8 +1089,8 @@
       try {
         const [allData, resDev, resCat] = await Promise.all([
           fetchAllIncidents(),
-          fetch('/api/developers'),
-          fetch('/api/categories')
+          fetch('/api/incidents/developers'),
+          fetch('/api/incidents/categories')
         ]);
         state.rawIncidents = allData;
         addSearchBlobs(state.rawIncidents);
@@ -959,21 +1185,51 @@
     function populateFiltersUI() {
       // Company (developer) chips
       const devContainer = document.getElementById('filterContainerDeveloper');
+      const devCounts = new Map();
+      state.rawIncidents.forEach(inc => {
+        if (inc.developer) {
+          const parts = inc.developer.split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
+          parts.forEach(dev => {
+            const norm = normalizeCompany(dev);
+            if (norm) {
+              devCounts.set(norm, (devCounts.get(norm) || 0) + 1);
+            }
+          });
+        }
+      });
+      // Sort by incident frequency descending, then alphabetically, keeping "Other Developers" at the bottom
+      const sortedDevList = [...devCounts.entries()]
+        .filter(e => e[0] !== 'Other Developers')
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(e => e[0]);
+      if (devCounts.has('Other Developers')) {
+        sortedDevList.push('Other Developers');
+      }
+      const sortedDevs = sortedDevList;
       devContainer.innerHTML = '<div class="filter-chip active" data-dev="all">All Companies</div>' +
-        state.uniqueDevelopers.map(dev => `<div class="filter-chip" data-dev="${escapeHtml(dev)}">${escapeHtml(dev)}</div>`).join('');
+        sortedDevs.map(dev => `<div class="filter-chip" data-dev="${escapeHtml(dev)}">${escapeHtml(dev)}</div>`).join('');
 
       // Category chips
       const catContainer = document.getElementById('filterContainerCategory');
+      const cats = Array.isArray(state.uniqueCategories) ? state.uniqueCategories : [];
+      const sortedCats = [...cats]
+        .filter(c => c && typeof c.category === 'string' && c.category.trim() !== '')
+        .sort((a, b) => a.category.localeCompare(b.category));
       catContainer.innerHTML = '<div class="filter-chip active" data-cat="all">All Categories</div>' +
-        state.uniqueCategories.map(c => `<div class="filter-chip" data-cat="${escapeHtml(c.category)}">${escapeHtml(c.category)}</div>`).join('');
+        sortedCats.map(c => `<div class="filter-chip" data-cat="${escapeHtml(c.category)}">${escapeHtml(c.category)}</div>`).join('');
 
       // Geography chips — split multi-country strings (e.g. "USA; UK") into individual country chips.
       const geoSet = new Map();
       state.rawIncidents.forEach(inc => {
         const parts = (inc.geography || 'Global').split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
-        parts.forEach(country => geoSet.set(country, (geoSet.get(country) || 0) + 1));
+        parts.forEach(country => {
+          const norm = normalizeGeography(country);
+          if (norm) {
+            geoSet.set(norm, (geoSet.get(norm) || 0) + 1);
+          }
+        });
       });
-      const geoSorted = [...geoSet.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
+      const geoSorted = [...geoSet.keys()].sort((a, b) => a.localeCompare(b));
       const geoContainer = document.getElementById('filterContainerGeography');
       geoContainer.innerHTML = '<div class="filter-chip active" data-geo="all">All Regions</div>' +
         geoSorted.map(g => `<div class="filter-chip" data-geo="${escapeHtml(g)}">${escapeHtml(g)}</div>`).join('');
@@ -988,7 +1244,12 @@
           tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
         });
       });
-      const topTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 24).map(e => e[0]);
+      const topTags = [...tagCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 24)
+        .map(e => e[0])
+        .filter(t => typeof t === 'string' && t.trim() !== '')
+        .sort((a, b) => a.localeCompare(b));
       const tagContainer = document.getElementById('filterContainerTags');
       tagContainer.innerHTML = '<div class="filter-chip active" data-tag="all">All Tags</div>' +
         topTags.map(t => `<div class="filter-chip" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</div>`).join('');
@@ -1062,10 +1323,16 @@
       state.filteredIncidents = state.rawIncidents.filter(inc => {
         if (!state.allYears && inc.year > state.year) return false;
         if (f.severity !== 'all' && inc.severity !== parseInt(f.severity, 10)) return false;
-        if (!f.developer.includes('all') && !f.developer.includes(inc.developer)) return false;
+        if (!f.developer.includes('all')) {
+          const incDevParts = (inc.developer || '')
+            .split(/[;,\/]/)
+            .map(s => normalizeCompany(s))
+            .filter(Boolean);
+          if (!f.developer.some(sel => incDevParts.includes(sel))) return false;
+        }
         if (!f.category.includes('all') && !f.category.includes(inc.category)) return false;
         if (!f.geography.includes('all')) {
-          const incGeoParts = (inc.geography || 'Global').split(/[;,\/]/).map(s => s.trim()).filter(Boolean);
+          const incGeoParts = (inc.geography || 'Global').split(/[;,\/]/).map(s => normalizeGeography(s)).filter(Boolean);
           if (!f.geography.some(sel => incGeoParts.includes(sel))) return false;
         }
         if (!f.source.includes('all') && !f.source.includes(inc.source)) return false;
@@ -1383,9 +1650,9 @@
       const centerY = ch * 0.5;
 
       const sevCentroids = {
-        3: { cx: centerX, cy: centerY - d, radius: r3, label: "SEV 3 (Critical)" },
-        2: { cx: centerX - d * 0.866, cy: centerY + d * 0.5, radius: r2, label: "SEV 2 (Moderate)" },
-        1: { cx: centerX + d * 0.866, cy: centerY + d * 0.5, radius: r1, label: "SEV 1 (Minor)" }
+        3: { cx: centerX, cy: centerY - d, radius: r3, label: "Critical" },
+        2: { cx: centerX - d * 0.866, cy: centerY + d * 0.5, radius: r2, label: "Moderate" },
+        1: { cx: centerX + d * 0.866, cy: centerY + d * 0.5, radius: r1, label: "Minor" }
       };
       state.severityCentroids = sevCentroids;
 
@@ -2412,25 +2679,32 @@
       if (state.mouseX !== -9999 && (state.mouseDirty || !state.hoveredNode)) {
         state.mouseDirty = false;
         let currentHovered = null;
-        let bestR = -1;
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          if (p.scale < 0.4) continue;
-          const dx = p.dispX - mouseTrans.x;
-          const dy = p.dispY - mouseTrans.y;
-          
-          // Shrink factor in geography view affects the visual size of the dot
-          const shrinkFactor = 1 - 0.45 * geographyOp;
-          const currentRadius = p.radius * shrinkFactor;
-          
-          // Keep clickable area at a generous constant size on screen (at least 6.5 screen pixels)
-          const hitR = Math.max(6.5, currentRadius + 5) / state.transform.k;
-          
-          if (dx * dx + dy * dy <= hitR * hitR && p.radius > bestR) {
-            currentHovered = p;
-            bestR = p.radius;
+        
+        // Ensure cursor is directly over the canvas, not obscured by header, timeline, or drawers
+        const isCursorOverCanvas = document.elementFromPoint(state.mouseX, state.mouseY) === canvas;
+        
+        if (isCursorOverCanvas) {
+          let bestR = -1;
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            if (p.scale < 0.4) continue;
+            const dx = p.dispX - mouseTrans.x;
+            const dy = p.dispY - mouseTrans.y;
+            
+            // Shrink factor in geography view affects the visual size of the dot
+            const shrinkFactor = 1 - 0.45 * geographyOp;
+            const currentRadius = p.radius * shrinkFactor;
+            
+            // Keep clickable area at a generous constant size on screen (at least 6.5 screen pixels)
+            const hitR = Math.max(6.5, currentRadius + 5) / state.transform.k;
+            
+            if (dx * dx + dy * dy <= hitR * hitR && p.radius > bestR) {
+              currentHovered = p;
+              bestR = p.radius;
+            }
           }
         }
+        
         if (currentHovered !== state.hoveredNode) {
           state.hoveredNode = currentHovered;
           drawHoverTooltip();
@@ -2465,6 +2739,7 @@
       const p = state.hoveredNode;
       const inc = p.incident;
       const severityDots = [1, 2, 3].map(s => `<span class="dot ${s <= inc.severity ? 'active' : ''}"></span>`).join('');
+      const sevLabel = inc.severity === 3 ? 'Critical' : (inc.severity === 2 ? 'Moderate' : 'Minor');
       
       const resolvedUrl = resolveSourceUrl(inc);
       const sourceUrlBadge = resolvedUrl ? `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener" class="t-link">Source ↗</a>` : '';
@@ -2478,7 +2753,7 @@
         </div>
         <div class="t-description">${escapeHtml(cleanDescription(inc.description).substring(0, 140))}…</div>
         <div class="t-footer">
-          <div class="t-severity"><span class="lbl">SEV</span>${severityDots}</div>
+          <div class="t-severity"><span class="lbl">${sevLabel}</span>${severityDots}</div>
           ${sourceUrlBadge}
         </div>
       `;
@@ -2548,7 +2823,8 @@
       `;
 
       const severityDots = [1, 2, 3].map(s => `<span class="dot ${s <= inc.severity ? 'active' : ''}"></span>`).join('');
-      document.getElementById('lockedSeverity').innerHTML = `<span class="lbl">SEV</span>${severityDots}`;
+      const sevLabel = inc.severity === 3 ? 'Critical' : (inc.severity === 2 ? 'Moderate' : 'Minor');
+      document.getElementById('lockedSeverity').innerHTML = `<span class="lbl">${sevLabel}</span>${severityDots}`;
 
       const linkEl = document.getElementById('lockedSourceLink');
       const lockedUrl = resolveSourceUrl(inc);
@@ -2869,7 +3145,7 @@
         }
 
         // Tap on touch or click on desktop: select nearest node
-        if (!wasDragging) {
+        if (!wasDragging && e.target === canvas) {
           const rect = canvas.getBoundingClientRect();
           const tx = (e.clientX - rect.left - state.transform.x) / state.transform.k;
           const ty = (e.clientY - rect.top - state.transform.y) / state.transform.k;
@@ -3018,22 +3294,40 @@
     
     // Morph Layout View Select
     const viewSelect = document.getElementById('viewSelect');
+    const viewSelectLabel = document.getElementById('viewSelectLabel');
     if (viewSelect) {
       viewSelect.value = state.view;
+      const updateViewLabel = () => {
+        if (viewSelectLabel) {
+          viewSelectLabel.textContent = `View: ${viewSelect.options[viewSelect.selectedIndex].text}`;
+        }
+      };
+      updateViewLabel();
       viewSelect.addEventListener('change', (e) => {
         const viewName = e.target.value;
+        updateViewLabel();
         if (state.view === viewName) return;
         state.view = viewName;
         resetViewport();
+        viewSelect.blur();
       });
     }
 
     // Color Mode Select
     const colorSelect = document.getElementById('colorSelect');
+    const colorSelectLabel = document.getElementById('colorSelectLabel');
     if (colorSelect) {
       colorSelect.value = state.colorMode;
+      const updateColorLabel = () => {
+        if (colorSelectLabel) {
+          colorSelectLabel.textContent = `Color: ${colorSelect.options[colorSelect.selectedIndex].text}`;
+        }
+      };
+      updateColorLabel();
       colorSelect.addEventListener('change', (e) => {
         state.colorMode = e.target.value;
+        updateColorLabel();
+        colorSelect.blur();
       });
     }
 
