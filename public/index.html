@@ -1770,10 +1770,27 @@
           const countries = parseGeoCountries(geoKey);
           const primaryCountry = countries[0] || 'Global';
           if (state._geoProjection) {
-            const coords = GEO_COORDS[primaryCountry] || GEO_COORDS['Global'];
+            let coords = GEO_COORDS[primaryCountry] || GEO_COORDS['Global'];
+            let scatterPx = countryScatterPx(primaryCountry, state._geoProjection);
+
+            // Distribute some USA incidents to Alaska and Hawaii so they don't look empty
+            if (primaryCountry === 'United States' || primaryCountry === 'USA' || primaryCountry === 'US' || primaryCountry === 'United States of America') {
+              const stateRand = seededRand(inc.id * 7 + 3);
+              if (stateRand > 0.96) { // 4% to Hawaii
+                coords = [-155.5, 19.8];
+                const offset = state._geoProjection([coords[0] + 1.5, coords[1]]);
+                const p = state._geoProjection(coords);
+                scatterPx = (offset && p) ? Math.max(8, Math.abs(offset[0] - p[0])) : 10;
+              } else if (stateRand > 0.88) { // 8% to Alaska
+                coords = [-152.0, 64.2];
+                const offset = state._geoProjection([coords[0] + 6, coords[1]]);
+                const p = state._geoProjection(coords);
+                scatterPx = (offset && p) ? Math.max(8, Math.abs(offset[0] - p[0])) : 15;
+              }
+            }
+
             const projected = state._geoProjection(coords);
             if (projected) {
-              const scatterPx = countryScatterPx(primaryCountry, state._geoProjection);
               const r1 = seededRand(inc.id * 13 + 1);
               const r2 = seededRand(inc.id * 13 + 2);
               const angle = r1 * Math.PI * 2;
@@ -1866,13 +1883,29 @@
           if (!primary) return;
 
           countries.slice(1).forEach((country, si) => {
-            const coords = GEO_COORDS[country];
+            let coords = GEO_COORDS[country];
             if (!coords) return;
+            let scatterPx = countryScatterPx(country, state._geoProjection);
+            const seed = inc.id * 31 + (si + 1) * 97;
+
+            if (country === 'United States' || country === 'USA' || country === 'US' || country === 'United States of America') {
+              const stateRand = seededRand(seed * 7 + 3);
+              if (stateRand > 0.96) { // 4% to Hawaii
+                coords = [-155.5, 19.8];
+                const offset = state._geoProjection([coords[0] + 1.5, coords[1]]);
+                const p = state._geoProjection(coords);
+                scatterPx = (offset && p) ? Math.max(8, Math.abs(offset[0] - p[0])) : 10;
+              } else if (stateRand > 0.88) { // 8% to Alaska
+                coords = [-152.0, 64.2];
+                const offset = state._geoProjection([coords[0] + 6, coords[1]]);
+                const p = state._geoProjection(coords);
+                scatterPx = (offset && p) ? Math.max(8, Math.abs(offset[0] - p[0])) : 15;
+              }
+            }
+
             const projected = state._geoProjection(coords);
             if (!projected) return;
 
-            const scatterPx = countryScatterPx(country, state._geoProjection);
-            const seed = inc.id * 31 + (si + 1) * 97;
             const angle = seededRand(seed + 1) * Math.PI * 2;
             const radius = Math.sqrt(seededRand(seed + 2)) * scatterPx;
             const sx = Math.max(10, Math.min(cw - 10, projected[0] + Math.cos(angle) * radius));
@@ -2030,20 +2063,29 @@
             const feature = getGeoJSONFeature(country);
             if (feature && d3) {
               try {
-                // If it's a MultiPolygon, extract the largest polygon (mainland) to avoid overseas territories
-                // from bloating the bounding box and breaking the density spacing calculation.
+                // If it's a MultiPolygon, filter out small/distant islands and keep only major components (like mainland and Alaska)
+                // to prevent overseas territories from bloating the bounding box and breaking the density spacing calculation.
                 let geoObj = feature.geometry;
                 if (geoObj && geoObj.type === 'MultiPolygon') {
-                  let maxLen = 0;
-                  let mainCoords = null;
-                  geoObj.coordinates.forEach(poly => {
-                    if (poly[0] && poly[0].length > maxLen) {
-                      maxLen = poly[0].length;
-                      mainCoords = poly;
-                    }
+                  const path = d3.geoPath().projection(state._geoProjection);
+                  const polyData = geoObj.coordinates.map(poly => {
+                    const tempGeo = { type: 'Polygon', coordinates: poly };
+                    const [[px0, py0], [px1, py1]] = path.bounds(tempGeo);
+                    const area = (px1 - px0) * (py1 - py0);
+                    return { poly, area };
                   });
-                  if (mainCoords) {
-                    geoObj = { type: 'Polygon', coordinates: mainCoords };
+                  
+                  const maxArea = Math.max(...polyData.map(d => d.area), 0);
+                  // Keep components that are at least 20% of the largest component's bounding box area
+                  const threshold = maxArea * 0.20;
+                  const keptPolys = polyData.filter(d => d.area >= threshold).map(d => d.poly);
+                  
+                  if (keptPolys.length > 0) {
+                    if (keptPolys.length === 1) {
+                      geoObj = { type: 'Polygon', coordinates: keptPolys[0] };
+                    } else {
+                      geoObj = { type: 'MultiPolygon', coordinates: keptPolys };
+                    }
                   }
                 }
 
