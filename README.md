@@ -1,5 +1,8 @@
 # AI Incident Observatory
 
+Video links: 
+[![YouTube](https://img.shields.io/badge/Watch%20on-YouTube-red?logo=youtube&logoColor=white)](https://youtu.be/AGbP2dNsQa4) [![Google Drive](https://img.shields.io/badge/Watch%20on-Google%20Drive-green?logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1vmf7ZKgfgncIonnZhRlIAEEaQRAdEQZQ/view?usp=sharing)
+
 An AI & Ethics project that does two things:
 
 1. **Catalogs real-world AI/ML system failures** from public incident databases and renders them as an interactive 2D canvas visualization.
